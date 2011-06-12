@@ -14,7 +14,7 @@ var stackedy = module.exports = function (src) {
         catch (err) {
             self.emit('error', {
                 stack : stack.stack,
-                message : err.message,
+                message : err.message || err,
                 original : err,
             });
         }
@@ -36,10 +36,10 @@ stackedy.stack = function (src) {
     var stack = [];
     context[names.call] = function (i) {
         var node = nodes[i];
-        stack.push(node);
+        stack.unshift(node);
         
         return function (expr) {
-            stack.pop();
+            stack.shift();
             return expr;
         };
     };
