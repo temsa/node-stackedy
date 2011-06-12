@@ -1,0 +1,42 @@
+{
+    "name" : "stackedy",
+    "description" : "Roll your own stack traces and control program execution through AST manipulation",
+    "version" : "0.0.1",
+    "repository" : {
+        "type" : "git",
+        "url" : "git://github.com/substack/node-stackedy.git"
+    },
+    "main" : "./index.js",
+    "keywords" : [
+        "stack",
+        "trace",
+        "ast",
+        "error",
+        "exception",
+        "trap",
+        "catch"
+    ],
+    "directories" : {
+        "lib" : ".",
+        "example" : "example",
+        "test" : "test"
+    },
+    "scripts" : {
+        "test" : "expresso"
+    },
+    "dependencies" : {
+        "burrito" : ">=0.1.2 <0.2"
+    },
+    "devDependencies" : {
+        "expresso" : "=0.7.x"
+    },
+    "engines" : {
+        "node" : ">=0.4.0"
+    },
+    "license" : "BSD",
+    "author" : {
+        "name" : "James Halliday",
+        "email" : "mail@substack.net",
+        "url" : "http://substack.net"
+    }
+}
