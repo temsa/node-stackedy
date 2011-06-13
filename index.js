@@ -1,29 +1,48 @@
 var burrito = require('burrito');
 var vm = require('vm');
+var Hash = require('hashish');
 var EventEmitter = require('events').EventEmitter;
 
-var stackedy = module.exports = function (src) {
-    var self = new EventEmitter;
+var exports = module.exports = function (src, opts) {
+    if (typeof src === 'function') {
+        src = '(' + src.toString() + ')()';
+    }
+    else if (src) {
+        src = src.toString();
+    }
     
-    var stack = stackedy.stack(src);
-    
-    process.nextTick(function () {
-        try {
-            vm.runInNewContext(stack.source, stack.context);
-        }
-        catch (err) {
-            self.emit('error', {
-                stack : stack.stack,
-                message : err.message || err,
-                original : err,
-            });
-        }
-    });
-    
-    return self;
+    var stack = new Stack();
+    if (src) stack.include(src, opts);
+    return stack;
 };
 
-stackedy.stack = function (src) {
+exports.Stack = Stack;
+Stack.prototype = new EventEmitter;
+
+function Stack () {
+    this.sources = [];
+}
+
+Stack.prototype.include = function (src, opts) {
+    if (typeof src === 'object') {
+        opts = src;
+    }
+    else {
+        opts.source = src;
+    }
+    
+    this.sources.push(opts);
+};
+
+Stack.prototype.runner = function (context, runner) {
+    var self = this;
+    
+    if (typeof context === 'function') {
+        cb = context;
+        context = cb;
+    }
+    if (!context) context = {};
+    
     var nodes = [];
     
     var names = {
@@ -31,9 +50,8 @@ stackedy.stack = function (src) {
         stat : burrito.generateName(6),
     };
     
-    var context = {};
-    
     var stack = [];
+    
     context[names.call] = function (i) {
         var node = nodes[i];
         stack.unshift(node);
@@ -44,15 +62,25 @@ stackedy.stack = function (src) {
         };
     };
     
-    var cur = null;
+    var current = null;
     context[names.stat] = function (i) {
         cur = nodes[i];
     };
     
-    var source = burrito(src, function (node) {
+    var preSrc = self.sources.map(function (s) {
+        return s.source
+    }).join('\n');
+    
+    self.lines = preSrc.split('\n');
+    
+    var postSrc = burrito(preSrc, function (node) {
+        node.lines = self.lines.slice(node.start.line, node.end.line + 1);
+        
         if (node.name === 'call') {
             var i = nodes.length;
             nodes.push(node);
+            
+            node.functionName = node.value[0][1] || 'anonymous';
             
             node.wrap(names.call + '(' + i + ')(%s)');
         }
@@ -64,10 +92,20 @@ stackedy.stack = function (src) {
         }
     });
     
-    return {
-        source : source,
-        context : context,
-        stack : stack,
-        nodes : nodes,
-    };
+    try {
+        return runner(postSrc, context);
+    }
+    catch (err) {
+        self.emit('error', {
+            stack : stack,
+            message : err.message || err,
+            original : err,
+        });
+    }
+};
+
+Stack.prototype.run = function (context) {
+    return this.runner(context, function (src, c) {
+        return vm.runInNewContext(src, c);
+    });
 };

@@ -1,6 +1,7 @@
 var stackedy = require('stackedy');
+var sprintf = require('sprintf').sprintf;
 
-var s = stackedy('(' + (function () {
+var src = '(' + (function () {
     //undefined.name;
     
     function f () { g() }
@@ -8,15 +9,17 @@ var s = stackedy('(' + (function () {
     function h () { throw 'moo' }
     
     f();
-}).toString() + ')()');
+}).toString() + ')()';
 
-s.on('error', function (err) {
-    console.log(err.message);
+var stack = stackedy(src, { filename : 'stax.js' });
+
+stack.on('error', function (err) {
+    console.log(err.message + '\n');
     
     err.stack.forEach(function (s) {
         if (s.name === 'call') {
-            var fnName = s.value[0][1] || 'anonymous';
-            var msg = ' at function ' + fnName + '()'
+            
+            var msg = ' in ' + s.functionName + '()'
                 + ' -> line ' + s.start.line + ', column ' + s.start.col;
             if (s.start.line !== s.end.line) {
                 msg += ' to line ' + s.end.line + ', column ' + s.end.col;
@@ -25,7 +28,18 @@ s.on('error', function (err) {
                 msg += ' to column ' + s.end.col;
             }
             
-            console.log(msg);
+            var code = '  ' + sprintf('%4d', s.start.line) + ' : '
+                + s.lines[0].replace(/^\s+/, '')
+            ;
+            
+            if (s.lines.length > 2) code += ' ... ';
+            if (s.lines.length > 1) {
+                code += s.lines.slice(-1)[0].replace(/^\s+/, '');
+            }
+            
+            console.log(msg + ':\n' + code + '\n');
         }
     });
 });
+
+stack.run();
