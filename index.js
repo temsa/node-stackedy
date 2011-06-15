@@ -79,12 +79,25 @@ Stack.prototype.compile = function (context) {
         return res;
     };
     
+    var timeouts = [];
+    context.setTimeout = function () {
+        var to = setTimeout.apply(this, arguments);
+        timeouts.push(to);
+        return to;
+    };
+    
+    context.clearTimeout = function (to) {
+        var res = clearTimeout.apply(this, arguments);
+        var i = timeouts.indexOf(to);
+        if (i >= 0) timeouts.splice(i, 1);
+        return res;
+    };
+    
     var stopped = false;
     compiled.stop = function () {
         stopped = true;
-        intervals.forEach(function (iv) {
-            clearInterval(iv);
-        });
+        intervals.forEach(function (iv) { clearInterval(iv) });
+        timeouts.forEach(function (to) { clearTimeout(to) });
     };
     
     compiled.current = null;

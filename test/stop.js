@@ -2,19 +2,19 @@ var stackedy = require('../');
 var assert = require('assert');
 
 var fs = require('fs');
-var src = fs.readFileSync(__dirname + '/stop/src.js');
+var src = {
+    interval : fs.readFileSync(__dirname + '/stop/interval.js'),
+    timeout : fs.readFileSync(__dirname + '/stop/timeout.js')
+};
 
-exports.stop = function () {
+exports.interval = function () {
     var context = {
         setInterval : setInterval,
         console : console,
         exports : {}
     };
 
-    var stack = stackedy(src).run(context);
-    stack.on('error', function (err) {
-        console.log(err.message);
-    });
+    var stack = stackedy(src.interval).run(context);
     
     setTimeout(function () {
         stack.stop();
@@ -24,4 +24,18 @@ exports.stop = function () {
     setTimeout(function () {
         assert.equal(context.exports.times, 9);
     }, 1200);
+};
+
+exports.timeout = function () {
+    var context = {
+        setInterval : setInterval,
+        console : console,
+        exports : {}
+    };
+    
+    var stack = stackedy(src.timeout).run(context);
+    
+    setTimeout(function () {
+        stack.stop();
+    }, 100);
 };
