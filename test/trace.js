@@ -34,5 +34,15 @@ exports.trace = function () {
             err.stack.map(function (s) { return s.end.line }),
             [ 1, 0, 4 ]
         );
+        
+        assert.deepEqual(
+            err.stack.map(function (s) { return s.start.col }),
+            [ 16, 16, 0 ]
+        );
+        
+        assert.deepEqual(
+            err.stack.map(function (s) { return s.end.col }),
+            [ 18, 18, 2 ]
+        );
     });
 };
