@@ -46,7 +46,7 @@ Stack.prototype.compile = function (context) {
     
     if (!context) context = {};
     compiled.context = context;
-    var nodes = [];
+    var nodes = compiled.nodes = [];
     
     var names = compiled.names = {
         call : burrito.generateName(6),
@@ -65,9 +65,15 @@ Stack.prototype.compile = function (context) {
         };
     };
     
+    var stopped = false;
+    compiled.stop = function () {
+        stopped = true;
+    };
+    
     compiled.current = null;
     context[names.stat] = function (i) {
-        compiled.current = nodes[i];
+        if (stopped) throw 'stopped'
+        else compiled.current = nodes[i];
     };
     
     var preSrc = self.sources.map(function (s) {
@@ -120,9 +126,8 @@ Stack.prototype.run = function (context) {
     self.stop = function () {
         self.removeAllListeners('error');
         
-        c.context[c.names.stat] = function () {
-            throw 'stopped';
-        };
+        c.stop();
+        self.emit('stop');
     };
     
     process.nextTick(function () {
