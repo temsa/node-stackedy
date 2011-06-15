@@ -152,6 +152,7 @@ Stack.prototype.compile = function (context) {
         }
         else if (node.name === 'defun') {
             var innards = burrito.deparse([ 'seq' ].concat(node.value[2]));
+console.dir(innards);
             var inner = burrito(innards, function (n) {
                 if (!n.parent()) {
                     n.parent = function () { return node };
