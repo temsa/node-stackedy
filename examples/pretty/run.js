@@ -2,7 +2,7 @@ var stackedy = require('stackedy');
 var fs = require('fs');
 
 var src = fs.readFileSync(__dirname + '/src.js');
-var stack = stackedy(src, { filename : 'stax.js' });
+var stack = stackedy(src, { filename : 'stax.js' }).run();
 
 stack.on('error', function (err) {
     console.log('Error: ' + err.message + '\n');
@@ -24,8 +24,6 @@ stack.on('error', function (err) {
         }
     });
 });
-
-stack.run();
 
 function getRange (s) {
     return s.start.line === s.end.line

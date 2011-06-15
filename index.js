@@ -16,7 +16,6 @@ var exports = module.exports = function (src, opts) {
 };
 
 exports.Stack = Stack;
-Stack.prototype = new EventEmitter;
 
 function Stack () {
     this.sources = [];
@@ -116,16 +115,30 @@ Stack.prototype.compile = function (context) {
 
 Stack.prototype.run = function (context) {
     var c = this.compile(context || {});
+    var self = new EventEmitter;
     
-    try {
-        return vm.runInNewContext(c.source, c.context);
-    }
-    catch (err) {
-        this.emit('error', {
-            stack : c.stack,
-            current : c.current,
-            message : err.message || err,
-            original : err,
-        });
-    }
+    self.stop = function () {
+        self.removeAllListeners('error');
+        
+        c.context[c.names.stat] = function () {
+            throw 'stopped';
+        };
+    };
+    
+    process.nextTick(function () {
+        try {
+            var res = vm.runInNewContext(c.source, c.context);
+            self.emit('result', res);
+        }
+        catch (err) {
+            self.emit('error', {
+                stack : c.stack,
+                current : c.current,
+                message : err.message || err,
+                original : err,
+            });
+        }
+    });
+    
+    return self;
 };
