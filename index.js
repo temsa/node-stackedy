@@ -125,7 +125,7 @@ Stack.prototype.compile = function (context) {
         return self.sources[i].filename;
     }
     
-    compiled.source = burrito(preSrc, function (node) {
+    compiled.source = burrito(preSrc, function wrapper (node) {
         node.lines = lines.slice(node.start.line, node.end.line + 1);
         
         if (node.name === 'call') {
@@ -149,6 +149,16 @@ Stack.prototype.compile = function (context) {
                 + 'try { return (%s).apply(this, arguments) }'
                 + 'catch (err) { if (err !== "stopped") throw err }'
             + '})');
+        }
+        else if (node.name === 'defun') {
+            var innards = burrito.deparse([ 'seq' ].concat(node.value[2]));
+            var name = node.value[0];
+            var args = node.value[1].join(',');
+            var src = 'function ' + name + '(' + args + ') {'
+                + 'try { ' + burrito(innards, wrapper) + ' }'
+                + 'catch (err) { if (err !== "stopped") throw err }'
+            + '}';
+            node.wrap(src);
         }
     });
     
