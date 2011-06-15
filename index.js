@@ -65,9 +65,26 @@ Stack.prototype.compile = function (context) {
         };
     };
     
+    var intervals = [];
+    context.setInterval = function () {
+        var iv = setInterval.apply(this, arguments);
+        intervals.push(iv);
+        return iv;
+    };
+    
+    context.clearInterval = function (iv) {
+        var res = clearInterval.apply(this, arguments);
+        var i = intervals.indexOf(iv);
+        if (i >= 0) intervals.splice(i, 1);
+        return res;
+    };
+    
     var stopped = false;
     compiled.stop = function () {
         stopped = true;
+        intervals.forEach(function (iv) {
+            clearInterval(iv);
+        });
     };
     
     compiled.current = null;

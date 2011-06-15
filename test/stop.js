@@ -15,13 +15,13 @@ exports.stop = function () {
     stack.on('error', function (err) {
         console.log(err.message);
     });
-
+    
     setTimeout(function () {
         stack.stop();
+        assert.equal(context.exports.times, 9);
     }, 1000);
-
-    setInterval(function () {
-        console.log(context.exports.times);
-    }, 500);
-
+    
+    setTimeout(function () {
+        assert.equal(context.exports.times, 9);
+    }, 1200);
 };
