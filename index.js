@@ -152,10 +152,17 @@ Stack.prototype.compile = function (context) {
         }
         else if (node.name === 'defun') {
             var innards = burrito.deparse([ 'seq' ].concat(node.value[2]));
+            var inner = burrito(innards, function (n) {
+                n.parent = function () { return node };
+                n.start.line = node.start.line;
+                n.end.line = node.end.line;
+                wrapper(n);
+            });
+            
             var name = node.value[0];
             var args = node.value[1].join(',');
             var src = 'function ' + name + '(' + args + ') {'
-                + 'try { ' + burrito(innards, wrapper) + ' }'
+                + 'try { ' + inner + ' }'
                 + 'catch (err) { if (err !== "stopped") throw err }'
             + '}';
             node.wrap(src);
