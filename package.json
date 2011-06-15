@@ -25,7 +25,7 @@
         "test" : "expresso"
     },
     "dependencies" : {
-        "burrito" : ">=0.1.4 <0.2"
+        "burrito" : "0.2.x"
     },
     "devDependencies" : {
         "expresso" : "=0.7.x"
