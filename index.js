@@ -1,6 +1,5 @@
 var burrito = require('burrito');
 var vm = require('vm');
-var Hash = require('hashish');
 var EventEmitter = require('events').EventEmitter;
 
 var exports = module.exports = function (src, opts) {
@@ -42,11 +41,12 @@ Stack.prototype.include = function (src, opts) {
     this.sources.push(opts);
 };
 
-Stack.prototype.compile = function () {
+Stack.prototype.compile = function (context) {
     var self = this;
     var compiled = {};
     
-    var context = compiled.context = {};
+    if (!context) context = {};
+    compiled.context = context;
     var nodes = [];
     
     var names = compiled.names = {
@@ -115,13 +115,10 @@ Stack.prototype.compile = function () {
 };
 
 Stack.prototype.run = function (context) {
-    if (!context) context = {};
-    
-    var c = this.compile();
-    Hash.update(context, c.context);
+    var c = this.compile(context || {});
     
     try {
-        return vm.runInNewContext(c.source, context);
+        return vm.runInNewContext(c.source, c.context);
     }
     catch (err) {
         this.emit('error', {
