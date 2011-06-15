@@ -42,6 +42,7 @@ exports.wait = function () {
                 cb();
             }, 50);
         },
+        console : console,
         exports : {}
     };
     

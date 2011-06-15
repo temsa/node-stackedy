@@ -102,12 +102,12 @@ Stack.prototype.compile = function (context) {
     
     compiled.current = null;
     context[names.stat] = function (i) {
-        if (stopped) throw 'stopped'
+        if (stopped) throw 'stopped';
         else compiled.current = nodes[i];
     };
     
     var preSrc = self.sources.map(function (s) {
-        return s.source
+        return s.source;
     }).join('\n');
     
     lines = preSrc.split('\n');
@@ -143,6 +143,12 @@ Stack.prototype.compile = function (context) {
             
             node.filename = whichFile(node.start.line);
             node.wrap('{' + names.stat + '(' + i + ');%s}');
+        }
+        else if (node.name === 'function') {
+            node.wrap('(function () {'
+                + 'try { return (%s).apply(this, arguments) }'
+                + 'catch (err) { if (err !== "stopped") throw err }'
+            + '})');
         }
     });
     
