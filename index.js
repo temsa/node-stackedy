@@ -72,7 +72,7 @@ Stack.prototype.runner = function (context, runner) {
     
     var current = null;
     context[names.stat] = function (i) {
-        cur = nodes[i];
+        current = nodes[i];
     };
     
     var preSrc = self.sources.map(function (s) {
@@ -123,6 +123,7 @@ Stack.prototype.runner = function (context, runner) {
     catch (err) {
         self.emit('error', {
             stack : stack,
+            current : current,
             message : err.message || err,
             original : err,
         });
