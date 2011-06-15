@@ -1,14 +1,7 @@
 var stackedy = require('stackedy');
+var fs = require('fs');
 
-var src = '(' + (function () {
-    function f () { g() }
-    function g () { h() }
-    function h () { throw 'moo' }
-    
-    f();
-    zzzzzzz();
-}).toString() + ')()';
-
+var src = fs.readFileSync(__dirname + '/src.js');
 var stack = stackedy(src, { filename : 'stax.js' });
 
 stack.on('error', function (err) {
