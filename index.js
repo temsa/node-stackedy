@@ -42,23 +42,19 @@ Stack.prototype.include = function (src, opts) {
     this.sources.push(opts);
 };
 
-Stack.prototype.runner = function (context, runner) {
+Stack.prototype.compile = function () {
     var self = this;
+    var compiled = {};
     
-    if (typeof context === 'function') {
-        cb = context;
-        context = cb;
-    }
-    if (!context) context = {};
-    
+    var context = compiled.context = {};
     var nodes = [];
     
-    var names = {
+    var names = compiled.names = {
         call : burrito.generateName(6),
-        stat : burrito.generateName(6),
+        stat : burrito.generateName(6)
     };
     
-    var stack = [];
+    var stack = compiled.stack = [];
     
     context[names.call] = function (i) {
         var node = nodes[i];
@@ -70,9 +66,9 @@ Stack.prototype.runner = function (context, runner) {
         };
     };
     
-    var current = null;
+    compiled.current = null;
     context[names.stat] = function (i) {
-        current = nodes[i];
+        compiled.current = nodes[i];
     };
     
     var preSrc = self.sources.map(function (s) {
@@ -81,22 +77,20 @@ Stack.prototype.runner = function (context, runner) {
     
     lines = preSrc.split('\n');
     
-    var whichFile = (function () {
-        var offsets = self.sources.reduce(function (acc, s, i) {
-            return acc.push(s.source.length + (acc[i-1] || 0));
-        }, []);
-        
-        return function (n) {
-            var sum = 0;
-            for (var i = 0; i < offsets.length && n < sum; i++) {
-                sum += offsets[i];
-            }
-            
-            return self.sources[i].filename;
-        };
-    })();
+    var offsets = self.sources.reduce(function (acc, s, i) {
+        return acc.push(s.source.length + (acc[i-1] || 0));
+    }, []);
     
-    var postSrc = burrito(preSrc, function (node) {
+    function whichFile (n) {
+        var sum = 0;
+        for (var i = 0; i < offsets.length && n < sum; i++) {
+            sum += offsets[i];
+        }
+        
+        return self.sources[i].filename;
+    }
+    
+    compiled.source = burrito(preSrc, function (node) {
         node.lines = lines.slice(node.start.line, node.end.line + 1);
         
         if (node.name === 'call') {
@@ -117,21 +111,24 @@ Stack.prototype.runner = function (context, runner) {
         }
     });
     
+    return compiled;
+};
+
+Stack.prototype.run = function (context) {
+    if (!context) context = {};
+    
+    var c = this.compile();
+    Hash.update(context, c.context);
+    
     try {
-        return runner(postSrc, context);
+        return vm.runInNewContext(c.source, context);
     }
     catch (err) {
-        self.emit('error', {
-            stack : stack,
-            current : current,
+        this.emit('error', {
+            stack : c.stack,
+            current : c.current,
             message : err.message || err,
             original : err,
         });
     }
-};
-
-Stack.prototype.run = function (context) {
-    return this.runner(context, function (src, c) {
-        return vm.runInNewContext(src, c);
-    });
 };
