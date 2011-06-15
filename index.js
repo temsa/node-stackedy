@@ -113,7 +113,7 @@ Stack.prototype.runner = function (context, runner) {
             nodes.push(node);
             
             node.filename = whichFile(node.start.line);
-            node.wrap(names.stat + '(' + i + ');%s');
+            node.wrap('{' + names.stat + '(' + i + ');%s}');
         }
     });
     

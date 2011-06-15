@@ -6,6 +6,7 @@ var src = '(' + (function () {
     function h () { throw 'moo' }
     
     f();
+    zzzzzzz();
 }).toString() + ')()';
 
 var stack = stackedy(src, { filename : 'stax.js' });
