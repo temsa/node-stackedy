@@ -88,7 +88,7 @@ exports.traceNested = function () {
         
         assert.deepEqual(
             err.stack.map(function (s) { return s.end.col }),
-            [ 22, 7, 2 ]
+            [ 22, 6, 2 ]
         );
     });
 };

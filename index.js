@@ -150,33 +150,14 @@ Stack.prototype.compile = function (context) {
                 + 'catch (err) { if (err !== "stopped") throw err }'
             + '})');
         }
-        else if (node.name === 'defun') {
-            var innards = burrito.deparse([ 'seq' ].concat(node.value[2]));
-console.dir(innards);
-            var inner = burrito(innards, function (n) {
-                if (!n.parent()) {
-                    n.parent = function () { return node };
-                }
-                var t = n.state.path.slice(1).reduce(
-                    function (acc, key) { return acc[key] },
-                    node.value[2][0][1]
-                );
-                if (t) {
-                    if (Array.isArray(t)) t = t[0];
-                    n.start = t.start;
-                    n.end = t.end;
-                }
-                
-                wrapper(n);
-            });
-            
-            var name = node.value[0];
-            var args = node.value[1].join(',');
-            var src = 'function ' + name + '(' + args + ') {'
-                + 'try { ' + inner + ' }'
+        else if (node.name === 'block') {
+            node.wrap('{'
+                + 'try { %s }'
                 + 'catch (err) { if (err !== "stopped") throw err }'
-            + '}';
-            node.wrap(src);
+            + '}');
+            
+            console.log(node.source());
+            console.log('---');
         }
     });
     
