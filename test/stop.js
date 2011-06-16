@@ -17,7 +17,7 @@ exports.interval = function () {
     setTimeout(function () {
         stack.stop();
         assert.equal(context.exports.times, 9);
-    }, 1000);
+    }, 1025);
     
     setTimeout(function () {
         assert.equal(context.exports.times, 9);
@@ -53,7 +53,7 @@ exports.timeout = function () {
         setTimeout(function () {
             stack.stop();
             assert.equal(context.exports.times, 5);
-        }, 300);
+        }, 325);
         
         setTimeout(function () {
             assert.equal(context.exports.times, 5);
