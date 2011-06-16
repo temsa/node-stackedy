@@ -34,8 +34,8 @@ exports.timeout = function () {
     }, 100);
 };
 
-exports.wait = function () {
-    [ 'function', 'defun' ].forEach(function (name) {
+[ 'Function', 'Defun' ].forEach(function (name) {
+    exports['wait' + name] = function () {
         var iv = null;
         var context = {
             wait : function (cb) {
@@ -48,7 +48,7 @@ exports.wait = function () {
             exports : {}
         };
         
-        var stack = stackedy(src['wait_' + name]).run(context);
+        var stack = stackedy(src['wait_' + name.toLowerCase()]).run(context);
         
         setTimeout(function () {
             stack.stop();
@@ -59,6 +59,6 @@ exports.wait = function () {
             assert.equal(context.exports.times, 5);
             clearInterval(iv);
         }, 500);
-    });
-};
+    };
+});
 

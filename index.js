@@ -155,9 +155,20 @@ Stack.prototype.compile = function (context) {
                 + 'try { %s }'
                 + 'catch (err) { if (err !== "stopped") throw err }'
             + '}');
+        }
+        else if (node.name === 'defun') {
+            var name = node.value[0];
+            var args = node.value[1].join(',');
+            var fnName = burrito.generateName(6);
             
-            console.log(node.source());
-            console.log('---');
+            var src = node.source().replace(
+                /function (\S+)/, 'function ' + fnName
+            );
+            
+            node.wrap('function ' + name + '(' + args + '){'
+                + 'try { (%s).apply(this, arguments) }'
+                + 'catch (err) { if (err !== "stopped") throw err }'
+            + '}');
         }
     });
     
