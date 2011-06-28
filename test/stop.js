@@ -14,13 +14,15 @@ exports.interval = function () {
 
     var stack = stackedy(src.interval).run(context);
     
+    var x0 = null;
     setTimeout(function () {
         stack.stop();
-        assert.equal(context.exports.times, 9);
+        x0 = context.exports.times;
+        assert.ok(x0 === 9 || x0 === 10);
     }, 1025);
     
     setTimeout(function () {
-        assert.equal(context.exports.times, 9);
+        assert.equal(context.exports.times, x0);
     }, 1200);
 };
 
@@ -50,13 +52,15 @@ exports.timeout = function () {
         
         var stack = stackedy(src['wait_' + name.toLowerCase()]).run(context);
         
+        var x0 = null;
         setTimeout(function () {
             stack.stop();
-            assert.equal(context.exports.times, 5);
+            x0 = context.exports.times;
+            assert.ok(x0 === 5 || x0 === 6);
         }, 325);
         
         setTimeout(function () {
-            assert.equal(context.exports.times, 5);
+            assert.equal(context.exports.times, x0);
             clearInterval(iv);
         }, 500);
     };
