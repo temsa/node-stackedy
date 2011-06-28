@@ -203,3 +203,24 @@ Stack.prototype.run = function (context) {
     
     return self;
 };
+
+var fs = require('fs');
+var wrapper = fs.readFileSync(__dirname + '/wrapper.js', 'utf8');
+
+Stack.prototype.bundle = function () {
+    var c = this.compile();
+    return wrapper
+        .replace(/\$body/g, function () {
+            return c.source
+        })
+        .replace(/\$nodes/g, function () {
+            return JSON.stringify(c.nodes)
+        })
+        .replace(/\$call/g, function () {
+            return c.names.call
+        })
+        .replace(/\$stat/g, function () {
+            return c.names.stat
+        })
+    ;
+};
