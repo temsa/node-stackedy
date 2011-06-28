@@ -10,7 +10,7 @@ examples
 simple custom stacktrace
 ------------------------
 
-examples/simple/run.js:
+example/simple/run.js:
 
 ````javascript
 var stackedy = require('stackedy');
