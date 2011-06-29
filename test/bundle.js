@@ -6,14 +6,14 @@ var vm = require('vm');
 var src = fs.readFileSync(__dirname + '/bundle/x.js');
 
 exports.bundle = function () {
-    var bundle = stackedy(src.calls, { filename : 'zoom.js' }).bundle();
+    var bundle = stackedy(src, { filename : 'zoom.js' }).bundle();
     var c = {
         assert : assert,
         module : { exports : {} }
     };
-    var b = c.exports = c.module.exports;
+    c.exports = c.module.exports;
     vm.runInNewContext(bundle, c);
-    console.dir(b);
+    var b = c.module.exports();
     
     var x = b.run();
     assert.equal(x.foo(5), 50);

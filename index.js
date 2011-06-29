@@ -209,6 +209,8 @@ var wrapper = fs.readFileSync(__dirname + '/wrapper.js', 'utf8');
 
 Stack.prototype.bundle = function () {
     var c = this.compile();
+    c.names.self = burrito.generateName(6);
+    
     return wrapper
         .replace(/\$body/g, function () {
             return c.source
@@ -221,6 +223,9 @@ Stack.prototype.bundle = function () {
         })
         .replace(/\$stat/g, function () {
             return c.names.stat
+        })
+        .replace(/\$self/g, function () {
+            return c.names.self
         })
     ;
 };

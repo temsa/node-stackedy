@@ -1,6 +1,7 @@
 module.exports = function () {
-    var $self = {
+    var $self = module.exports = {
         nodes : $nodes,
+        current : null,
         stopped : false,
         stack : [],
         run : function () {
@@ -25,10 +26,10 @@ module.exports = function () {
             return expr;
         };
     }
-    
+
     function $stat (i) {
         if ($self.stopped) throw 'stopped'
-        else compiled.current = $self.nodes[i]
+        else $self.current = $self.nodes[i]
     }
     
     return $self;
