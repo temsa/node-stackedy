@@ -1,30 +1,35 @@
 module.exports = function () {
-    var self = {
+    var $self = {
         nodes : $nodes,
         stopped : false,
         stack : [],
-        start : function () {
+        run : function () {
+            var module = { exports : {} };
+            var exports = module.exports;
+            
             $body
+            
+            return module.exports;
         },
         stop : function () {
-            self.stopped = true;
+            $self.stopped = true;
         }
     };
     
     function $call (i) {
-        var node = node[i];
-        self.stack.unshift(node);
+        var node = $self.nodes[i];
+        $self.stack.unshift(node);
         
         return function (expr) {
-            self.stack.shift();
+            $self.stack.shift();
             return expr;
         };
     }
     
     function $stat (i) {
-        if (self.stopped) throw 'stopped'
-        else compiled.current = nodes[i]
+        if ($self.stopped) throw 'stopped'
+        else compiled.current = $self.nodes[i]
     }
     
-    return self;
+    return $self;
 };
