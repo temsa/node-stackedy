@@ -1,10 +1,10 @@
 setTimeout(function () {
     assert.fail('should have stopped already');
-}, 100000);
+}, 1000);
 
 setTimeout(function () {
     clearTimeout(time);
-}, 100);
+}, 50);
 
 exports.foo = function (x) {
     return x * 10;

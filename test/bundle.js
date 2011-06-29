@@ -10,15 +10,13 @@ exports.bundle = function () {
     var c = {
         assert : assert,
         module : { exports : {} },
-        setTimeout : function () {
-            return setTimeout.apply(this, arguments);
-        },
+        setTimeout : setTimeout,
         setInterval : setInterval,
         clearTimeout : clearTimeout,
         clearInterval : clearInterval,
         time : setTimeout(function () {
             assert.fail('timeout never cleared in the x setTimeout')
-        }, 5000),
+        }, 2000),
         console : console,
     };
     c.exports = c.module.exports;
@@ -28,5 +26,8 @@ exports.bundle = function () {
     var x = b.run();
     assert.equal(x.foo(5), 50);
     assert.equal(x.bar(5), 38);
-    b.stop();
+    
+    setTimeout(function () {
+        b.stop();
+    }, 100);
 };
