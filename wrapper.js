@@ -4,8 +4,8 @@ module.exports = function () {
         current : null,
         stopped : false,
         stack : [],
-        _setTimeout : setTimeout,
-        _setInterval : setInterval,
+        setTimeout : setTimeout,
+        setInterval : setInterval,
         timeouts : [],
         intervals : [],
         run : function () {
@@ -13,15 +13,15 @@ module.exports = function () {
             var exports = module.exports;
             
             var setTimeout = function () {
-                var to = $self._setTimeout.apply(this, arguments);
+                var to = $self.setTimeout.apply(this, arguments);
                 $self.timeouts.push(to);
                 return to;
             };
             
             var setInterval = function () {
-                var to = $self._setInterval.apply(this, arguments);
-                $self.timeouts.push(to);
-                return to;
+                var iv = $self.setInterval.apply(this, arguments);
+                $self.intervals.push(iv);
+                return iv;
             };
             
             $body
@@ -31,7 +31,7 @@ module.exports = function () {
         stop : function () {
             $self.stopped = true;
             $self.intervals.forEach(function (iv) { clearInterval(iv) });
-            $self.timeouts.forEach(function (iv) { clearTimeout(iv) });
+            $self.timeouts.forEach(function (to) { clearTimeout(to) });
         }
     };
     

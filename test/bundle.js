@@ -10,10 +10,16 @@ exports.bundle = function () {
     var c = {
         assert : assert,
         module : { exports : {} },
+        setTimeout : function () {
+            return setTimeout.apply(this, arguments);
+        },
         setInterval : setInterval,
-        setTimeout : setTimeout,
         clearTimeout : clearTimeout,
-        clearInterval : clearInterval
+        clearInterval : clearInterval,
+        time : setTimeout(function () {
+            assert.fail('timeout never cleared in the x setTimeout')
+        }, 5000),
+        console : console,
     };
     c.exports = c.module.exports;
     vm.runInNewContext(bundle, c);
