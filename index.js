@@ -237,8 +237,13 @@ Stack.prototype.bundle = function () {
         .replace(/\$self/g, function () {
             return c.names.self
         })
+        .replace(/\$setTimeout/g, function () {
+            return c.names.setTimeout
+        })
+        .replace(/\$setInterval/g, function () {
+            return c.names.setInterval
+        })
     ;
-require('fs').writeFileSync('/tmp/src.js', src);
     return src;
 };
 

@@ -10,12 +10,14 @@ exports.bundle = function () {
     var c = {
         assert : assert,
         module : { exports : {} },
-        console : console
+        setInterval : setInterval,
+        setTimeout : setTimeout,
+        clearTimeout : clearTimeout,
+        clearInterval : clearInterval
     };
     c.exports = c.module.exports;
     vm.runInNewContext(bundle, c);
     var b = c.module.exports();
-console.dir(b);
     
     var x = b.run();
     assert.equal(x.foo(5), 50);
