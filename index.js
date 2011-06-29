@@ -211,9 +211,19 @@ Stack.prototype.bundle = function () {
     var c = this.compile();
     c.names.self = burrito.generateName(6);
     
-    return wrapper
+    var src = wrapper
         .replace(/\$body/g, function () {
-            return c.source
+            return [
+                nameFunction(
+                    'setTimeout',
+                    c.context.setTimeout.toString()
+                ),
+                nameFunction(
+                    'setInterval',
+                    c.context.setInterval.toString()
+                ),
+                c.source
+            ].join('\n')
         })
         .replace(/\$nodes/g, function () {
             return JSON.stringify(c.nodes)
@@ -228,4 +238,10 @@ Stack.prototype.bundle = function () {
             return c.names.self
         })
     ;
+require('fs').writeFileSync('/tmp/src.js', src);
+    return src;
 };
+
+function nameFunction (name, src) {
+    return src.replace(/^function \(/, 'function ' + name + '(');
+}

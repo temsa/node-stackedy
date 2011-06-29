@@ -9,11 +9,13 @@ exports.bundle = function () {
     var bundle = stackedy(src, { filename : 'zoom.js' }).bundle();
     var c = {
         assert : assert,
-        module : { exports : {} }
+        module : { exports : {} },
+        console : console
     };
     c.exports = c.module.exports;
     vm.runInNewContext(bundle, c);
     var b = c.module.exports();
+console.dir(b);
     
     var x = b.run();
     assert.equal(x.foo(5), 50);
