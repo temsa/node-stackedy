@@ -205,13 +205,17 @@ Stack.prototype.run = function (context) {
 };
 
 var fs = require('fs');
-var wrapper = fs.readFileSync(__dirname + '/wrapper.js', 'utf8');
+var wrapper = null;
 
 Stack.prototype.bundle = function () {
     var c = this.compile();
     c.names.self = burrito.generateName(6);
     
-    var src = wrapper
+    if (!wrapper) {
+        wrapper = fs.readFileSync(__dirname + '/wrapper.js', 'utf8');
+    }
+    
+    return wrapper
         .replace(/\$body/g, function () {
             return [
                 nameFunction(
@@ -244,7 +248,6 @@ Stack.prototype.bundle = function () {
             return c.names.setInterval
         })
     ;
-    return src;
 };
 
 function nameFunction (name, src) {
