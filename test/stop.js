@@ -2,12 +2,13 @@ var stackedy = require('../');
 var assert = require('assert');
 
 var fs = require('fs');
-var src = {
-    interval : fs.readFileSync(__dirname + '/stop/interval.js'),
-    timeout : fs.readFileSync(__dirname + '/stop/timeout.js'),
-    wait_function : fs.readFileSync(__dirname + '/stop/wait_function.js'),
-    wait_defun : fs.readFileSync(__dirname + '/stop/wait_defun.js')
-};
+var src = fs.readdirSync(__dirname + '/stop')
+    .reduce(function (acc, file) {
+        var key = file.replace(/\.js$/, '');
+        acc[key] = fs.readFileSync(__dirname + '/stop/' + file);
+        return acc;
+    }, {})
+;
 
 exports.interval = function () {
     var context = { exports : {} };
@@ -65,3 +66,17 @@ exports.timeout = function () {
         }, 500);
     };
 });
+
+exports.stopped = function () {
+    var context = { exports : {} };
+    var stack = stackedy(src.interval).run(context);
+    
+    var to = setTimeout(function () {
+        assert.fail('never caught error');
+    }, 1000);
+    
+    stack.on('error', function (err) {
+        assert.equal(err.message, 'stopped');
+        clearTimeout(to);
+    });
+};
