@@ -68,15 +68,14 @@ exports.timeout = function () {
 });
 
 exports.stopped = function () {
-    var context = { exports : {} };
-    var stack = stackedy(src.interval).run(context);
+    var stack = stackedy(src.stopped).run();
     
     var to = setTimeout(function () {
         assert.fail('never caught error');
     }, 1000);
     
     stack.on('error', function (err) {
-        assert.equal(err.message, 'stopped');
         clearTimeout(to);
+        assert.equal(err.message, 'stopped');
     });
 };

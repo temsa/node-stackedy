@@ -50,7 +50,8 @@ Stack.prototype.compile = function (context) {
     
     var names = compiled.names = {
         call : burrito.generateName(6),
-        stat : burrito.generateName(6)
+        stat : burrito.generateName(6),
+        stopped : burrito.generateName(6)
     };
     
     var stack = compiled.stack = [];
@@ -102,7 +103,7 @@ Stack.prototype.compile = function (context) {
     
     compiled.current = null;
     context[names.stat] = function (i) {
-        if (stopped) throw 'stopped';
+        if (stopped) throw names.stopped;
         else compiled.current = nodes[i];
     };
     
@@ -147,13 +148,17 @@ Stack.prototype.compile = function (context) {
         else if (node.name === 'function') {
             node.wrap('(function () {'
                 + 'try { return (%s).apply(this, arguments) }'
-                + 'catch (err) { if (err !== "stopped") throw err }'
+                + 'catch (err) { if (err !== '
+                    + JSON.stringify(names.stopped)
+                + ') throw err }'
             + '})');
         }
         else if (node.name === 'block') {
             node.wrap('{'
                 + 'try { %s }'
-                + 'catch (err) { if (err !== "stopped") throw err }'
+                + 'catch (err) { if (err !== '
+                    + JSON.stringify(names.stopped)
+                + ') throw err }'
             + '}');
         }
         else if (node.name === 'defun') {
@@ -167,7 +172,9 @@ Stack.prototype.compile = function (context) {
             
             node.wrap('function ' + name + '(' + args + '){'
                 + 'try { (%s).apply(this, arguments) }'
-                + 'catch (err) { if (err !== "stopped") throw err }'
+                + 'catch (err) { if (err !== '
+                    + JSON.stringify(names.stopped)
+                + ') throw err }'
             + '}');
         }
     });
