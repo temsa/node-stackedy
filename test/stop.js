@@ -19,7 +19,7 @@ exports.interval = function () {
     setTimeout(function () {
         stack.stop();
         x0 = context.exports.times;
-        assert.ok(x0 === 9 || x0 === 10);
+        assert.ok(x0 >= 5 && x0 <= 10);
     }, 1025);
     
     setTimeout(function () {
@@ -57,7 +57,7 @@ exports.timeout = function () {
         setTimeout(function () {
             stack.stop();
             x0 = context.exports.times;
-            assert.ok(x0 === 5 || x0 === 6);
+            assert.ok(x0 >= 3 || x0 <= 6);
         }, 325);
         
         setTimeout(function () {

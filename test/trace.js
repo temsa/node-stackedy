@@ -98,6 +98,10 @@ exports.traceNested = function () {
 
 exports.delay = function () {
     var stack = stackedy(src.delay, { filename : 'zoom.js' }).run();
+    require('fs').writeFileSync(
+        '/tmp/s.js', 
+        stackedy(src.delay).compile().source
+    );
     var to = setTimeout(function () {
         assert.fail('never caught error')
     }, 5000);
