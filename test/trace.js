@@ -114,8 +114,6 @@ exports.delay = function () {
         assert.equal(err.current.start.line, 4);
         assert.equal(err.current.end.line, 4);
         
-        assert.equal(err.stack.length, 4);
-        
         assert.deepEqual(
             err.stack.map(function (s) { return s.functionName }),
             [ 'anonymous', 'setTimeout', 'h', 'g', 'f' ]

@@ -86,12 +86,21 @@ Stack.prototype.compile = function (context) {
         var stack_ = stack.slice();
         var args = [].slice.call(arguments, 1);
         args.unshift(function () {
+            // save the first argument to setTimeout but don't wrapNode yet
+            // since wrapNode would be lots of unnecessary ops unless fn throws
+            var raw = compiled.current.value[0][2][0];
+            
             try {
                 fn.apply(this, arguments);
             }
             catch (err) {
+                // push the wrapped first argument to setTimeout()
+                var node = burrito.wrapNode({ node : raw });
+                node.functionName = (node.value[0] && node.value[0][1])
+                    || 'anonymous';
+                
                 compiled.emitter.emit('error', {
-                    stack : stack_,
+                    stack : stack.concat(node, stack_),
                     current : compiled.current,
                     message : err.message || err,
                     original : err,
