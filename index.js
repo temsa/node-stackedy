@@ -126,6 +126,13 @@ Stack.prototype.compile = function (context) {
         return self.sources[i].filename;
     }
     
+    var ex = function (s) {
+        return 'try {' + s + '}'
+        + 'catch (err) { if (err !== '
+            + JSON.stringify(names.stopped)
+        + ') throw err }'
+    };
+    
     compiled.source = burrito(preSrc, function wrapper (node) {
         node.lines = lines.slice(node.start.line, node.end.line + 1);
         
@@ -147,19 +154,11 @@ Stack.prototype.compile = function (context) {
         }
         else if (node.name === 'function') {
             node.wrap('(function () {'
-                + 'try { return (%s).apply(this, arguments) }'
-                + 'catch (err) { if (err !== '
-                    + JSON.stringify(names.stopped)
-                + ') throw err }'
+                + ex('return (%s).apply(this, arguments)')
             + '})');
         }
         else if (node.name === 'block') {
-            node.wrap('{'
-                + 'try { %s }'
-                + 'catch (err) { if (err !== '
-                    + JSON.stringify(names.stopped)
-                + ') throw err }'
-            + '}');
+            node.wrap('{' + ex('%s') + '}');
         }
         else if (node.name === 'defun') {
             var name = node.value[0];
@@ -171,10 +170,7 @@ Stack.prototype.compile = function (context) {
             );
             
             node.wrap('function ' + name + '(' + args + '){'
-                + 'try { (%s).apply(this, arguments) }'
-                + 'catch (err) { if (err !== '
-                    + JSON.stringify(names.stopped)
-                + ') throw err }'
+                + ex('(%s).apply(this, arguments)')
             + '}');
         }
     });
