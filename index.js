@@ -67,31 +67,17 @@ Stack.prototype.compile = function (context) {
         };
     };
     
-    var intervals = [];
-    context.setInterval = function () {
-        var iv = setInterval.apply(this, arguments);
-        intervals.push(iv);
-        return iv;
-    };
-    
-    context.clearInterval = function (iv) {
-        var res = clearInterval.apply(this, arguments);
-        var i = intervals.indexOf(iv);
-        if (i >= 0) intervals.splice(i, 1);
-        return res;
-    };
-    
-    var timeouts = [];
-    context.setTimeout = function (fn) {
+    var wrapEv = function (args_) {
+        var fn = args_[0];
         var stack_ = stack.slice();
-        var args = [].slice.call(arguments, 1);
+        var args = [].slice.call(args_, 1);
         args.unshift(function () {
             // save the first argument to setTimeout but don't wrapNode yet
             // since wrapNode would be lots of unnecessary ops unless fn throws
             var raw = compiled.current.value[0][2][0];
             
             try {
-                fn.apply(this, arguments);
+                return fn.apply(this, arguments);
             }
             catch (err) {
                 // push the wrapped first argument to setTimeout()
@@ -107,7 +93,27 @@ Stack.prototype.compile = function (context) {
                 });
             }
         });
-        
+        return args;
+    }
+    
+    var intervals = [];
+    context.setInterval = function () {
+        var args = wrapEv(arguments);
+        var iv = setInterval.apply(this, args);
+        intervals.push(iv);
+        return iv;
+    };
+    
+    context.clearInterval = function (iv) {
+        var res = clearInterval.apply(this, arguments);
+        var i = intervals.indexOf(iv);
+        if (i >= 0) intervals.splice(i, 1);
+        return res;
+    };
+    
+    var timeouts = [];
+    context.setTimeout = function () {
+        var args = wrapEv(arguments);
         var to = setTimeout.apply(this, args);
         timeouts.push(to);
         return to;
