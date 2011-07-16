@@ -132,3 +132,23 @@ exports.nestDelay = function () {
         );
     });
 };
+
+exports.caught = function () {
+    var stack = stackedy(src.caught).run();
+    
+    stack.on('error', function (err) {
+        assert.fail(err && err.message || err);
+    });
+};
+
+exports.uncaught = function () {
+    var stack = stackedy(src.uncaught).run();
+    
+    stack.on('error', function (err) {
+        assert.equal(err.message, 'b');
+        assert.deepEqual(
+            err.stack.map(function (s) { return s.functionName }),
+            [ 'f' ]
+        );
+    });
+};
