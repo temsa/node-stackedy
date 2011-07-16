@@ -82,8 +82,7 @@ Stack.prototype.compile = function (context) {
             catch (err) {
                 // push the wrapped first argument to setTimeout()
                 var node = burrito.wrapNode({ node : raw });
-                node.functionName = (node.value[0] && node.value[0][1])
-                    || null;
+                node.functionName = nameOf(node);
                 
                 compiled.emitter.emit('error', {
                     stack : stack.concat(node, stack_),
@@ -172,8 +171,7 @@ Stack.prototype.compile = function (context) {
             var i = nodes.length;
             nodes.push(node);
             
-            node.functionName = node.value[0][1] || null;
-            
+            node.functionName = nameOf(node);
             node.filename = whichFile(node.start.line);
             node.wrap(names.call + '(' + i + ')(%s)');
         }
@@ -287,4 +285,16 @@ Stack.prototype.bundle = function () {
 
 function nameFunction (name, src) {
     return src.replace(/^function \(/, 'function ' + name + '(');
+}
+
+function nameOf (node) {
+    if (typeof node.value[0] === 'string') {
+        return node.value[0];
+    }
+    else if (node.value[0] && typeof node.value[0][1] === 'string') {
+        return node.value[0][1];
+    }
+    else {
+        return null;
+    }
 }

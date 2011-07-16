@@ -98,10 +98,6 @@ exports.traceNested = function () {
 
 exports.delay = function () {
     var stack = stackedy(src.delay, { filename : 'zoom.js' }).run();
-    require('fs').writeFileSync(
-        '/tmp/s.js', 
-        stackedy(src.delay).compile().source
-    );
     var to = setTimeout(function () {
         assert.fail('never caught error')
     }, 5000);
@@ -117,6 +113,22 @@ exports.delay = function () {
         assert.deepEqual(
             err.stack.map(function (s) { return s.functionName }),
             [ null, 'setTimeout', 'h', 'g', 'f' ]
+        );
+    });
+};
+
+exports.nestDelay = function () {
+    var stack = stackedy(src.nest_delay).run();
+    var to = setTimeout(function () {
+        assert.fail('never caught error')
+    }, 5000);
+    
+    stack.on('error', function (err) {
+        clearTimeout(to);
+        assert.equal(err.message, 'moo');
+        assert.deepEqual(
+            err.stack.map(function (s) { return s.functionName }),
+            [ 'yyy', 'xxx', 'setTimeout', 'h', 'g', 'f' ]
         );
     });
 };
