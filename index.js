@@ -42,7 +42,7 @@ Stack.prototype.include = function (src, opts) {
 
 Stack.prototype.compile = function (context) {
     var self = this;
-    var compiled = {};
+    var compiled = { emitter : new EventEmitter };
     
     if (!context) context = {};
     compiled.context = context;
@@ -51,7 +51,8 @@ Stack.prototype.compile = function (context) {
     var names = compiled.names = {
         call : burrito.generateName(6),
         stat : burrito.generateName(6),
-        stopped : burrito.generateName(6)
+        stopped : burrito.generateName(6),
+        exception : burrito.generateName(6)
     };
     
     var stack = compiled.stack = [];
@@ -81,8 +82,23 @@ Stack.prototype.compile = function (context) {
     };
     
     var timeouts = [];
-    context.setTimeout = function () {
-        var to = setTimeout.apply(this, arguments);
+    context.setTimeout = function (fn) {
+        var args = [].slice.call(arguments, 1);
+        args.unshift(function () {
+            try {
+                fn.apply(this, arguments);
+            }
+            catch (err) {
+                compiled.emitter.emit('error', {
+                    stack : compiled.stack,
+                    current : compiled.current,
+                    message : err.message || err,
+                    original : err,
+                });
+            }
+        });
+        
+        var to = setTimeout.apply(this, args);
         timeouts.push(to);
         return to;
     };
@@ -180,7 +196,7 @@ Stack.prototype.compile = function (context) {
 
 Stack.prototype.run = function (context) {
     var c = this.compile(context || {});
-    var self = new EventEmitter;
+    var self = c.emitter;
     
     self.stop = function () {
         self.removeAllListeners('error');
