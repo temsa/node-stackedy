@@ -211,6 +211,8 @@ Stack.prototype.compile = function (context) {
 Stack.prototype.run = function (context) {
     var c = this.compile(context || {});
     var self = c.emitter;
+    self.current = c.current;
+    self.stack = c.stack;
     
     self.stop = function () {
         self.removeAllListeners('error');
