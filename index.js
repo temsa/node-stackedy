@@ -97,7 +97,7 @@ Stack.prototype.compile = function (context) {
                 // push the wrapped first argument to setTimeout()
                 var node = burrito.wrapNode({ node : raw });
                 node.functionName = (node.value[0] && node.value[0][1])
-                    || 'anonymous';
+                    || null;
                 
                 compiled.emitter.emit('error', {
                     stack : stack.concat(node, stack_),
@@ -166,7 +166,7 @@ Stack.prototype.compile = function (context) {
             var i = nodes.length;
             nodes.push(node);
             
-            node.functionName = node.value[0][1] || 'anonymous';
+            node.functionName = node.value[0][1] || null;
             
             node.filename = whichFile(node.start.line);
             node.wrap(names.call + '(' + i + ')(%s)');

@@ -116,7 +116,7 @@ exports.delay = function () {
         
         assert.deepEqual(
             err.stack.map(function (s) { return s.functionName }),
-            [ 'anonymous', 'setTimeout', 'h', 'g', 'f' ]
+            [ null, 'setTimeout', 'h', 'g', 'f' ]
         );
     });
 };
