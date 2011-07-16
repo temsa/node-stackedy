@@ -83,6 +83,7 @@ Stack.prototype.compile = function (context) {
     
     var timeouts = [];
     context.setTimeout = function (fn) {
+        var stack_ = stack.slice();
         var args = [].slice.call(arguments, 1);
         args.unshift(function () {
             try {
@@ -90,7 +91,7 @@ Stack.prototype.compile = function (context) {
             }
             catch (err) {
                 compiled.emitter.emit('error', {
-                    stack : compiled.stack,
+                    stack : stack_,
                     current : compiled.current,
                     message : err.message || err,
                     original : err,

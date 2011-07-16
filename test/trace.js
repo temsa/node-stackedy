@@ -118,7 +118,7 @@ exports.delay = function () {
         
         assert.deepEqual(
             err.stack.map(function (s) { return s.functionName }),
-            [ 'anonymous', 'h', 'g', 'f' ]
+            [ 'anonymous', 'setTimeout', 'h', 'g', 'f' ]
         );
         
         assert.deepEqual(
