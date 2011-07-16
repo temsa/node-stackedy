@@ -118,25 +118,5 @@ exports.delay = function () {
             err.stack.map(function (s) { return s.functionName }),
             [ 'anonymous', 'setTimeout', 'h', 'g', 'f' ]
         );
-        
-        assert.deepEqual(
-            err.stack.map(function (s) { return s.start.line }),
-            [ 2, 1, 0, 9 ]
-        );
-        
-        assert.deepEqual(
-            err.stack.map(function (s) { return s.end.line }),
-            [ 6, 1, 0, 9 ]
-        );
-        
-        assert.deepEqual(
-            err.stack.map(function (s) { return s.start.col }),
-            [ 5, 16, 16, 0 ]
-        );
-        
-        assert.deepEqual(
-            err.stack.map(function (s) { return s.end.col }),
-            [ 11, 18, 18, 2 ]
-        );
     });
 };
