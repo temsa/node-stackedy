@@ -111,10 +111,10 @@ exports.delay = function () {
         
         assert.equal(err.message, 'moo');
         assert.equal(err.current.filename, 'zoom.js');
-        assert.equal(err.current.start.line, 2);
-        assert.equal(err.current.end.line, 2);
+        assert.equal(err.current.start.line, 4);
+        assert.equal(err.current.end.line, 4);
         
-        assert.equal(err.stack.length, 3);
+        assert.equal(err.stack.length, 4);
         
         assert.deepEqual(
             err.stack.map(function (s) { return s.functionName }),
