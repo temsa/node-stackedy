@@ -174,7 +174,7 @@ Stack.prototype.compile = function (context) {
         + ') throw err }'
     };
     
-    compiled.source = burrito(preSrc, function wrapper (node) {
+    function wrapper (node) {
         node.lines = lines.slice(node.start.line, node.end.line + 1);
         
         if (node.name === 'call') {
@@ -213,7 +213,16 @@ Stack.prototype.compile = function (context) {
                 + ex('(%s).apply(this, arguments)')
             + '}');
         }
-    });
+    }
+    
+    try {
+        compiled.source = burrito(preSrc, wrapper);
+    }
+    catch (err) {
+        process.nextTick(function () {
+            compiled.emitter.emit('error', err);
+        });
+    }
     
     return compiled;
 };
@@ -233,7 +242,10 @@ Stack.prototype.run = function (context) {
     
     process.nextTick(function () {
         try {
-            var res = vm.runInNewContext(c.source, c.context);
+            var res = vm.runInNewContext(
+                '(function () {' + c.source + '})()',
+                c.context
+            );
             self.emit('result', res);
         }
         catch (err) {
