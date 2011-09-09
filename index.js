@@ -1,4 +1,5 @@
 var burrito = require('burrito');
+var json = typeof JSON === 'object' ? JSON : require('jsonify');
 var vm = require('vm');
 var EventEmitter = require('events').EventEmitter;
 
@@ -88,7 +89,7 @@ Stack.prototype.compile = function (context) {
                     stack : stack.concat(node, stack_),
                     current : compiled.current,
                     message : err.message || err,
-                    original : err,
+                    original : err
                 });
             }
         });
@@ -169,7 +170,7 @@ Stack.prototype.compile = function (context) {
     var ex = function (s) {
         return 'try {' + s + '}'
         + 'catch (err) { if (err !== '
-            + JSON.stringify(names.stopped)
+            + json.stringify(names.stopped)
         + ') throw err }'
     };
     
@@ -240,7 +241,7 @@ Stack.prototype.run = function (context) {
                 stack : c.stack,
                 current : c.current,
                 message : err.message || err,
-                original : err,
+                original : err
             });
         }
     });
@@ -274,7 +275,7 @@ Stack.prototype.bundle = function () {
             ].join('\n')
         })
         .replace(/\$nodes/g, function () {
-            return JSON.stringify(c.nodes)
+            return json.stringify(c.nodes)
         })
         .replace(/\$call/g, function () {
             return c.names.call
