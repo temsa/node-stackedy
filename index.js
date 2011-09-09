@@ -138,15 +138,24 @@ Stack.prototype.compile = function (context) {
         else compiled.current = nodes[i];
     };
     
-    var preSrc = self.sources.map(function (s) {
-        return s.source;
-    }).join('\n');
+    var preSrc = (function () {
+        var xs = [];
+        for (var i = 0; i < self.sources.length; i++) {
+            xs.push(self.sources[i].source);
+        }
+        return xs.join('\n');
+    })();
     
     lines = preSrc.split('\n');
     
-    var offsets = self.sources.reduce(function (acc, s, i) {
-        return acc.push(s.source.length + (acc[i-1] || 0));
-    }, []);
+    var offsets = (function () {
+        var xs = [];
+        for (var i = 0; i < self.sources.length; i++) {
+            var s = self.sources[i];
+            xs.push(s.source.length + (xs[i-1] || 0));
+        }
+        return xs;
+    })();
     
     function whichFile (n) {
         var sum = 0;
