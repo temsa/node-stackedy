@@ -1,5 +1,5 @@
 var stackedy = require('../');
-var assert = require('assert');
+var test = require('tap').test;
 
 var fs = require('fs');
 var src = fs.readdirSync(__dirname + '/stop')
@@ -10,45 +10,51 @@ var src = fs.readdirSync(__dirname + '/stop')
     }, {})
 ;
 
-exports.interval = function () {
-    var context = { exports : {} };
-
+test('interval', function (t) {
+    t.plan(3);
+    var context = { exports : {}, t : t };
     var stack = stackedy(src.interval).run(context);
     
     var x0 = null;
     setTimeout(function () {
         stack.stop();
         x0 = context.exports.times;
-        assert.ok(x0 >= 5 && x0 <= 10);
-    }, 1025);
+        t.ok(x0 >= 200 / 25 - 2 && x0 <= 200 / 25);
+    }, 200);
     
     setTimeout(function () {
-        assert.equal(context.exports.times, x0);
-    }, 1200);
-};
+        t.equal(context.exports.times, x0);
+        t.end();
+    }, 400);
+});
 
-exports.timeout = function () {
-    var context = { exports : {} };
+test('timeout', function (t) {
+    t.plan(1);
+    var context = { exports : {}, t : t };
     
     var stack = stackedy(src.timeout).run(context);
     
     setTimeout(function () {
         stack.stop();
+        t.end();
     }, 100);
-};
+});
 
 [ 'Function', 'Defun' ].forEach(function (name) {
-    exports['wait' + name] = function () {
+    test('wait' + name, function (t) {
+        t.plan(4);
+        
         var iv = null;
         var context = {
             wait : function (cb) {
-                assert.ok(!iv);
+                t.ok(!iv);
                 iv = setInterval(function () {
                     cb();
                 }, 50);
             },
             console : console,
-            exports : {}
+            exports : {},
+            t : t
         };
         
         var stack = stackedy(src['wait_' + name.toLowerCase()]).run(context);
@@ -57,25 +63,23 @@ exports.timeout = function () {
         setTimeout(function () {
             stack.stop();
             x0 = context.exports.times;
-            assert.ok(x0 >= 3 || x0 <= 6);
+            t.ok(x0 >= 3 || x0 <= 6);
         }, 325);
         
         setTimeout(function () {
-            assert.equal(context.exports.times, x0);
+            t.equal(context.exports.times, x0);
             clearInterval(iv);
+            t.end();
         }, 500);
-    };
+    });
 });
 
-exports.stopped = function () {
-    var stack = stackedy(src.stopped).run();
-    
-    var to = setTimeout(function () {
-        assert.fail('never caught error');
-    }, 1000);
+test('stopped', function (t) {
+    t.plan(2);
+    var stack = stackedy(src.stopped).run({ t : t });
     
     stack.on('error', function (err) {
-        clearTimeout(to);
-        assert.equal(err.message, 'stopped');
+        t.equal(err.message, 'stopped');
+        t.end();
     });
-};
+});

@@ -1,22 +1,24 @@
 var stackedy = require('../');
-var assert = require('assert');
+var test = require('tap').test;
 
 var fs = require('fs');
 var vm = require('vm');
 var src = fs.readFileSync(__dirname + '/bundle/x.js');
 
-exports.bundle = function () {
+test('bundle', function (t) {
+    t.plan(3);
     var bundle = stackedy(src, { filename : 'zoom.js' }).bundle();
     var c = {
-        assert : assert,
+        t : t,
         module : { exports : {} },
         setTimeout : setTimeout,
         setInterval : setInterval,
         clearTimeout : clearTimeout,
         clearInterval : clearInterval,
         time : setTimeout(function () {
-            assert.fail('timeout never cleared in the x setTimeout')
-        }, 2000),
+            t.fail('should have quit by now');
+        }, 1000),
+        finish : function () { t.end() },
         console : console,
     };
     c.exports = c.module.exports;
@@ -24,10 +26,10 @@ exports.bundle = function () {
     var b = c.module.exports();
     
     var x = b.run();
-    assert.equal(x.foo(5), 50);
-    assert.equal(x.bar(5), 38);
+    t.equal(x.foo(5), 50);
+    t.equal(x.bar(5), 38);
     
     setTimeout(function () {
         b.stop();
     }, 100);
-};
+});

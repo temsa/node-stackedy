@@ -22,14 +22,14 @@
         "test" : "test"
     },
     "scripts" : {
-        "test" : "expresso"
+        "test" : "node node_modules/tap/bin/tap.js test/*.js || tap test/*.js"
     },
     "dependencies" : {
         "burrito" : "0.2.x",
         "jsonify" : "0.0.x"
     },
     "devDependencies" : {
-        "expresso" : "=0.7.x"
+        "tap" : "0.0.x"
     },
     "engines" : {
         "node" : ">=0.4.0"

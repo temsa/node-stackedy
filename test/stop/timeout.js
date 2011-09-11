@@ -1,3 +1,5 @@
+t.ok(true);
+
 setTimeout(function () {
-    throw 'took you long enough!'
-}, 10000000);
+    t.fail('never should have done this');
+}, 1000);
