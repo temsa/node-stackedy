@@ -238,8 +238,8 @@ Stack.prototype.compile = function (context, opts) {
     return compiled;
 };
 
-Stack.prototype.run = function (context) {
-    var c = this.compile(context || {});
+Stack.prototype.run = function (context, opts) {
+    var c = this.compile(context || {}, opts);
     var self = c.emitter;
     self.current = c.current;
     self.stack = c.stack;
