@@ -83,3 +83,15 @@ test('stopped', function (t) {
         t.end();
     });
 });
+
+test('stoppable', function (t) {
+    var stack = stackedy('setTimeout(t.end.bind(t), 100)')
+        .run(
+            { t : t, setTimeout : setTimeout },
+            { stoppable : false }
+        );
+    
+    t.throws(function () {
+        stack.stop();
+    });
+});
