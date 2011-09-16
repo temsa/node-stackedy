@@ -41,11 +41,14 @@ Stack.prototype.include = function (src, opts) {
     this.sources.push(opts);
 };
 
-Stack.prototype.compile = function (context) {
+Stack.prototype.compile = function (context, opts) {
     var self = this;
     var compiled = { emitter : new EventEmitter };
     
     if (!context) context = {};
+    if (!opts) opts = {};
+    if (opts.stoppable === undefined) opts.stoppable = true;
+    
     compiled.context = context;
     var nodes = compiled.nodes = [];
     
@@ -97,41 +100,49 @@ Stack.prototype.compile = function (context) {
     }
     
     var intervals = [];
-    context.setInterval = function () {
-        var args = wrapEv(arguments);
-        var iv = setInterval.apply(this, args);
-        intervals.push(iv);
-        return iv;
-    };
-    
-    context.clearInterval = function (iv) {
-        var res = clearInterval.apply(this, arguments);
-        var i = intervals.indexOf(iv);
-        if (i >= 0) intervals.splice(i, 1);
-        return res;
-    };
-    
     var timeouts = [];
-    context.setTimeout = function () {
-        var args = wrapEv(arguments);
-        var to = setTimeout.apply(this, args);
-        timeouts.push(to);
-        return to;
-    };
-    
-    context.clearTimeout = function (to) {
-        var res = clearTimeout.apply(this, arguments);
-        var i = timeouts.indexOf(to);
-        if (i >= 0) timeouts.splice(i, 1);
-        return res;
-    };
-    
     var stopped = false;
-    compiled.stop = function () {
-        stopped = true;
-        intervals.forEach(function (iv) { clearInterval(iv) });
-        timeouts.forEach(function (to) { clearTimeout(to) });
-    };
+    
+    if (opts.stoppable) {
+        context.setInterval = function () {
+            var args = wrapEv(arguments);
+            var iv = setInterval.apply(this, args);
+            intervals.push(iv);
+            return iv;
+        };
+        
+        context.clearInterval = function (iv) {
+            var res = clearInterval.apply(this, arguments);
+            var i = intervals.indexOf(iv);
+            if (i >= 0) intervals.splice(i, 1);
+            return res;
+        };
+        
+        context.setTimeout = function () {
+            var args = wrapEv(arguments);
+            var to = setTimeout.apply(this, args);
+            timeouts.push(to);
+            return to;
+        };
+        
+        context.clearTimeout = function (to) {
+            var res = clearTimeout.apply(this, arguments);
+            var i = timeouts.indexOf(to);
+            if (i >= 0) timeouts.splice(i, 1);
+            return res;
+        };
+        
+        compiled.stop = function () {
+            stopped = true;
+            intervals.forEach(function (iv) { clearInterval(iv) });
+            timeouts.forEach(function (to) { clearTimeout(to) });
+        };
+    }
+    else {
+        compiled.stop = function () {
+            throw new Error('execution not stoppable')
+        };
+    }
     
     compiled.current = null;
     context[names.stat] = function (i) {
