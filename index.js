@@ -72,7 +72,11 @@ Stack.prototype.compile = function (context, opts) {
     };
     
     context[names.exception] = function (err) {
-        return err;
+        compiled.emitter.emit('error', err, {
+            stack : compiled.stack.slice(),
+            current : compiled.current
+        });
+        return stopped;
     };
     
     var wrapEv = function (args_) {
@@ -182,9 +186,11 @@ Stack.prototype.compile = function (context, opts) {
     
     var ex = function (s) {
         return 'try {' + s + '}'
-        + 'catch (err) { if (err !== '
-            + json.stringify(names.stopped)
-        + ') throw ' + names.exception + '(err) }'
+        + 'catch (err) {'
+            + 'if (err !== ' + json.stringify(names.stopped) + ') {'
+                + 'if (' + names.exception + '(err)) throw err'
+            + '}'
+        + '}'
     };
     
     function wrapper (node) {
