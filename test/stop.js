@@ -79,7 +79,7 @@ test('stopped', function (t) {
     var stack = stackedy(src.stopped).run({ t : t });
     
     stack.on('error', function (err) {
-        t.equal(err.message, 'stopped');
+        t.equal(err, 'stopped');
         t.end();
     });
 });

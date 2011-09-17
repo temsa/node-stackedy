@@ -71,6 +71,10 @@ Stack.prototype.compile = function (context, opts) {
         };
     };
     
+    context[names.exception] = function (err) {
+        return err;
+    };
+    
     var wrapEv = function (args_) {
         var fn = args_[0];
         var stack_ = stack.slice();
@@ -88,11 +92,9 @@ Stack.prototype.compile = function (context, opts) {
                 var node = burrito.wrapNode({ node : raw });
                 node.functionName = nameOf(node);
                 
-                compiled.emitter.emit('error', {
+                compiled.emitter.emit('error', err, {
                     stack : stack.concat(node, stack_),
-                    current : compiled.current,
-                    message : err.message || err,
-                    original : err
+                    current : compiled.current
                 });
             }
         });
@@ -182,7 +184,7 @@ Stack.prototype.compile = function (context, opts) {
         return 'try {' + s + '}'
         + 'catch (err) { if (err !== '
             + json.stringify(names.stopped)
-        + ') throw err }'
+        + ') throw ' + names.exception + '(err) }'
     };
     
     function wrapper (node) {
@@ -231,7 +233,10 @@ Stack.prototype.compile = function (context, opts) {
     }
     catch (err) {
         process.nextTick(function () {
-            compiled.emitter.emit('error', err);
+            compiled.emitter.emit('error', err, {
+                stack : stack.concat(node, stack_),
+                current : compiled.current
+            });
         });
     }
     
@@ -260,11 +265,9 @@ Stack.prototype.run = function (context, opts) {
             self.emit('result', res);
         }
         catch (err) {
-            self.emit('error', {
-                stack : c.stack,
-                current : c.current,
-                message : err.message || err,
-                original : err
+            self.emit('error', err, {
+                stack : c.stack.slice(),
+                current : c.current
             });
         }
     });
