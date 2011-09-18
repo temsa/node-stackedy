@@ -5,7 +5,7 @@ var fs = require('fs');
 var src = fs.readFileSync(__dirname + '/sources/runner.js', 'utf8');
 test('runner', function (t) {
     t.plan(11);
-    var stack = stackedy(src, { filename : 'zoom.js' }).run({
+    var stack = stackedy(src, { filename : 'zoom.js' }).run({}, {
         runner : function (s, context) {
             t.ok(s.length > src.length);
             
