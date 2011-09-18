@@ -80,6 +80,9 @@ Stack.prototype.compile = function (context, opts) {
             if (stack.length === 0) {
                 stack.unshift(nodes[ix]);
             }
+            else {
+                stack.splice(0);
+            }
             stack.push.apply(stack, stacks[ix]);
             return fn.apply(this, arguments);
         };
@@ -90,7 +93,7 @@ Stack.prototype.compile = function (context, opts) {
             stack : stacks[id] || compiled.stack.slice(),
             current : compiled.current
         });
-        return stopped;
+        return !stopped;
     };
     
     var intervals = [];
