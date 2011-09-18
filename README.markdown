@@ -61,15 +61,19 @@ Include a source file body `src` into the current bundle.
 `opts` can specify a `'filename'` key to augment the stack parameters with
 filenames.
 
-stack.run(context={}, opts={stoppable:true})
---------------------------------------------
+stack.run(context={}, opts)
+---------------------------
 
 Execute the compiled source with the given context using `vm.runInNewContext()`.
 
-`opts.stoppable` controls whether the execution can be stopped with `.stop()`.
+`opts.stoppable` defaults to `true` and controls whether the execution can be
+stopped with `.stop()`.
 
-stack.compile(context={}, opts={stoppable:true})
-------------------------------------------------
+`opts.runner(src, context)` is the function used to run the transformed source.
+It defaults to `vm.runInNewContext`.
+
+stack.compile(context={}, opts)
+-------------------------------
 
 Compile the sources into a single file with the transformations in place.
 
