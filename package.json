@@ -25,7 +25,7 @@
         "test" : "tap test/*.js"
     },
     "dependencies" : {
-        "burrito" : "0.2.x",
+        "burrito" : ">=0.2.5 <0.3",
         "jsonify" : "0.0.x"
     },
     "devDependencies" : {

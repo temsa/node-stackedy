@@ -184,7 +184,7 @@ Stack.prototype.compile = function (context, opts) {
         var ix = nodes.push(node) - 1;
         
         if (node.name === 'call') {
-            node.functionName = nameOf(node);
+            node.functionName = burrito.label(node);
             node.filename = whichFile(node.start.line);
             node.wrap(names.call + '(' + ix + ')(%s)');
         }
@@ -193,7 +193,7 @@ Stack.prototype.compile = function (context, opts) {
             node.wrap('{' + names.stat + '(' + ix + ');%s}');
         }
         else if (node.name === 'function') {
-            node.functionName = nameOf(node);
+            node.functionName = burrito.label(node);
             node.wrap(names.fn + '(' + ix + ', (function () {'
                 + ex(ix, 'return (%s).apply(this, arguments)')
             + '}))');
@@ -269,16 +269,4 @@ Stack.prototype.run = function (context, opts) {
 
 function nameFunction (name, src) {
     return src.replace(/^function \(/, 'function ' + name + '(');
-}
-
-function nameOf (node) {
-    if (typeof node.value[0] === 'string') {
-        return node.value[0];
-    }
-    else if (node.value[0] && typeof node.value[0][1] === 'string') {
-        return node.value[0][1];
-    }
-    else {
-        return null;
-    }
 }
