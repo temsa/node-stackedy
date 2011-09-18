@@ -55,6 +55,7 @@ Stack.prototype.compile = function (context, opts) {
     var names = compiled.names = {
         call : burrito.generateName(6),
         stat : burrito.generateName(6),
+        fn : burrito.generateName(6),
         stopped : burrito.generateName(6),
         exception : burrito.generateName(6)
     };
@@ -71,9 +72,15 @@ Stack.prototype.compile = function (context, opts) {
         };
     };
     
-    context[names.exception] = function (err) {
+    var stacks = {};
+    context[names.fn] = function (id, fn) {
+        stacks[id] = stack.slice();
+        return fn;
+    };
+    
+    context[names.exception] = function (id, err) {
         compiled.emitter.emit('error', err, {
-            stack : compiled.stack.slice(),
+            stack : stacks[id] || compiled.stack.slice(),
             current : compiled.current
         });
         return stopped;
@@ -184,11 +191,11 @@ Stack.prototype.compile = function (context, opts) {
         return self.sources[i].filename;
     }
     
-    var ex = function (s) {
+    var ex = function (id, s) {
         return 'try {' + s + '}'
         + 'catch (err) {'
             + 'if (err !== ' + json.stringify(names.stopped) + ') {'
-                + 'if (' + names.exception + '(err)) throw err'
+                + 'if (' + names.exception + '(' + id + ', err)) throw err'
             + '}'
         + '}'
     };
@@ -212,12 +219,12 @@ Stack.prototype.compile = function (context, opts) {
             node.wrap('{' + names.stat + '(' + i + ');%s}');
         }
         else if (node.name === 'function') {
-            node.wrap('(function () {'
-                + ex('return (%s).apply(this, arguments)')
-            + '})');
+            node.wrap(names.fn + '(' + node.id + ', (function () {'
+                + ex(node.id, 'return (%s).apply(this, arguments)')
+            + '}))');
         }
         else if (node.name === 'block') {
-            node.wrap('{' + ex('%s') + '}');
+            node.wrap('{' + ex(node.id, '%s') + '}');
         }
         else if (node.name === 'defun') {
             var name = node.value[0];
@@ -229,7 +236,7 @@ Stack.prototype.compile = function (context, opts) {
             );
             
             node.wrap('function ' + name + '(' + args + '){'
-                + ex('(%s).apply(this, arguments)')
+                + ex(node.id, '(%s).apply(this, arguments)')
             + '}');
         }
     }
@@ -311,6 +318,9 @@ Stack.prototype.bundle = function () {
         })
         .replace(/\$call/g, function () {
             return c.names.call
+        })
+        .replace(/\$fn/g, function () {
+            return c.names.fn
         })
         .replace(/\$stat/g, function () {
             return c.names.stat
