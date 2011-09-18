@@ -9,6 +9,7 @@ test('delay', function (t) {
     var stack = stackedy(src, { filename : 'zoom.js' }).run();
     
     stack.on('error', function (err, c) {
+        stack.stop();
         t.equal(err, 'moo');
         t.equal(c.current.filename, 'zoom.js');
         t.equal(c.current.start.line, 4);

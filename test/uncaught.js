@@ -9,6 +9,7 @@ test('uncaught', function (t) {
     var stack = stackedy(src).run();
     
     stack.on('error', function (err, c) {
+        stack.stop();
         t.equal(err, 'b');
         t.deepEqual(
             c.stack.map(function (s) { return s.functionName }),

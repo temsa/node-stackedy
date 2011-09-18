@@ -12,6 +12,7 @@ test('throw in a setTimeout', function (t) {
     });
     
     stack.on('error', function (err) {
+        stack.stop();
         t.equal(err, 'beep');
         t.end();
     });

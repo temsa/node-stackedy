@@ -9,6 +9,7 @@ test('stopped', function (t) {
     var stack = stackedy(src).run({ t : t });
     
     stack.on('error', function (err) {
+        stack.stop();
         t.equal(err, 'stopped');
         t.end();
     });

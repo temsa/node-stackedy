@@ -9,6 +9,7 @@ test('nestDelay', function (t) {
     var stack = stackedy(src).run({ process : process });
     
     stack.on('error', function (err, c) {
+        stack.stop();
         t.equal(err, 'moo');
         t.deepEqual(
             c.stack.map(function (s) { return s.functionName }),
