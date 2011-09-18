@@ -76,10 +76,3 @@ Compile the sources into a single file with the transformations in place.
 Returns an object with source, augmented context, current and others.
 
 `opts.stoppable` controls whether the execution can be stopped with `.stop()`.
-
-stack.bundle()
---------------
-
-Return a self-contained script runner which you can call `.run()` and `.stop()`
-on. This function is useful if you want to bundle up a script to run in the
-browser.
