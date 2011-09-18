@@ -86,10 +86,13 @@ Stack.prototype.compile = function (context, opts) {
                 && stack_[0].functionName
                 && stack_[0].functionName === node.functionName
             ;
-            if (!already) stack.unshift(nodes[ix]);
+            if (!already) stack_.unshift(nodes[ix]);
             
-            stack.push.apply(stack, stacks[ix]);
-            return fn.apply(this, arguments);
+            stack.push.apply(stack, stack_);
+            var res = fn.apply(this, arguments);
+            
+            if (!already) stack.shift();
+            return res;
         };
     };
     
@@ -113,9 +116,9 @@ Stack.prototype.compile = function (context, opts) {
         }
     };
     
-    context[names.exception] = function (id, err) {
+    context[names.exception] = function (ix, err) {
         compiled.emitter.emit('error', err, {
-            stack : stacks[id] || compiled.stack.slice(),
+            stack : stacks[ix] || compiled.stack.slice(),
             current : compiled.current
         });
         return !stopped;
@@ -198,11 +201,11 @@ Stack.prototype.compile = function (context, opts) {
         return self.sources[i].filename;
     }
     
-    var ex = function (id, s) {
+    var ex = function (ix, s) {
         return 'try {' + s + '}'
         + 'catch (err) {'
             + 'if (err !== ' + json.stringify(names.stopped) + ') {'
-                + 'if (' + names.exception + '(' + id + ', err)) throw err'
+                + 'if (' + names.exception + '(' + ix + ', err)) throw err'
             + '}'
         + '}'
     };
