@@ -92,8 +92,8 @@ test('traceNested', function (t) {
         t.end();
     });
 });
-*/
 
+*/
 test('delay', function (t) {
     t.plan(5);
     var stack = stackedy(src.delay, { filename : 'zoom.js' }).run();

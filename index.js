@@ -73,9 +73,16 @@ Stack.prototype.compile = function (context, opts) {
     };
     
     var stacks = {};
-    context[names.fn] = function (id, fn) {
-        stacks[id] = stack.slice();
-        return fn;
+    context[names.fn] = function (ix, fn) {
+        stacks[ix] = stack.slice();
+        
+        return function () {
+            if (stack.length === 0) {
+                stack.unshift(nodes[ix]);
+            }
+            stack.push.apply(stack, stacks[ix]);
+            return fn.apply(this, arguments);
+        };
     };
     
     context[names.exception] = function (id, err) {
@@ -86,40 +93,13 @@ Stack.prototype.compile = function (context, opts) {
         return stopped;
     };
     
-    var wrapEv = function (args_) {
-        var fn = args_[0];
-        var stack_ = stack.slice();
-        var args = [].slice.call(args_, 1);
-        args.unshift(function () {
-            // save the first argument to setTimeout but don't wrapNode yet
-            // since wrapNode would be lots of unnecessary ops unless fn throws
-            var raw = compiled.current.value[0][2][0];
-            
-            try {
-                return fn.apply(this, arguments);
-            }
-            catch (err) {
-                // push the wrapped first argument to setTimeout()
-                var node = burrito.wrapNode({ node : raw });
-                node.functionName = nameOf(node);
-                
-                compiled.emitter.emit('error', err, {
-                    stack : stack.concat(node, stack_),
-                    current : compiled.current
-                });
-            }
-        });
-        return args;
-    }
-    
     var intervals = [];
     var timeouts = [];
     var stopped = false;
     
     if (opts.stoppable) {
         context.setInterval = function () {
-            var args = wrapEv(arguments);
-            var iv = setInterval.apply(this, args);
+            var iv = setInterval.apply(this, arguments);
             intervals.push(iv);
             return iv;
         };
@@ -132,8 +112,7 @@ Stack.prototype.compile = function (context, opts) {
         };
         
         context.setTimeout = function () {
-            var args = wrapEv(arguments);
-            var to = setTimeout.apply(this, args);
+            var to = setTimeout.apply(this, arguments);
             timeouts.push(to);
             return to;
         };
@@ -202,41 +181,38 @@ Stack.prototype.compile = function (context, opts) {
     
     function wrapper (node) {
         node.lines = lines.slice(node.start.line, node.end.line + 1);
+        var ix = nodes.push(node) - 1;
         
         if (node.name === 'call') {
-            var i = nodes.length;
-            nodes.push(node);
-            
             node.functionName = nameOf(node);
             node.filename = whichFile(node.start.line);
-            node.wrap(names.call + '(' + i + ')(%s)');
+            node.wrap(names.call + '(' + ix + ')(%s)');
         }
         else if (node.name === 'stat' || node.name === 'throw') {
-            var i = nodes.length;
-            nodes.push(node);
-            
             node.filename = whichFile(node.start.line);
-            node.wrap('{' + names.stat + '(' + i + ');%s}');
+            node.wrap('{' + names.stat + '(' + ix + ');%s}');
         }
         else if (node.name === 'function') {
-            node.wrap(names.fn + '(' + node.id + ', (function () {'
-                + ex(node.id, 'return (%s).apply(this, arguments)')
+            node.functionName = nameOf(node);
+            node.wrap(names.fn + '(' + ix + ', (function () {'
+                + ex(ix, 'return (%s).apply(this, arguments)')
             + '}))');
         }
         else if (node.name === 'block') {
-            node.wrap('{' + ex(node.id, '%s') + '}');
+            node.wrap('{' + ex(ix, '%s') + '}');
         }
         else if (node.name === 'defun') {
             var name = node.value[0];
             var args = node.value[1].join(',');
             var fnName = burrito.generateName(6);
+            node.functionName = name;
             
             var src = node.source().replace(
                 /function (\S+)/, 'function ' + fnName
             );
             
             node.wrap('function ' + name + '(' + args + '){'
-                + ex(node.id, '(%s).apply(this, arguments)')
+                + ex(ix, '(%s).apply(this, arguments)')
             + '}');
         }
     }
