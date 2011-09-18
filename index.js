@@ -288,55 +288,6 @@ Stack.prototype.run = function (context, opts) {
     return self;
 };
 
-var fs = require('fs');
-var wrapper = null;
-
-Stack.prototype.bundle = function () {
-    var c = this.compile();
-    c.names.self = burrito.generateName(6);
-    
-    if (!wrapper) {
-        wrapper = fs.readFileSync(__dirname + '/wrapper.js', 'utf8');
-    }
-    
-    return wrapper
-        .replace(/\$body/g, function () {
-            return [
-                nameFunction(
-                    'setTimeout',
-                    c.context.setTimeout.toString()
-                ),
-                nameFunction(
-                    'setInterval',
-                    c.context.setInterval.toString()
-                ),
-                c.source
-            ].join('\n')
-        })
-        .replace(/\$nodes/g, function () {
-            return json.stringify(c.nodes)
-        })
-        .replace(/\$call/g, function () {
-            return c.names.call
-        })
-        .replace(/\$fn/g, function () {
-            return c.names.fn
-        })
-        .replace(/\$stat/g, function () {
-            return c.names.stat
-        })
-        .replace(/\$self/g, function () {
-            return c.names.self
-        })
-        .replace(/\$setTimeout/g, function () {
-            return c.names.setTimeout
-        })
-        .replace(/\$setInterval/g, function () {
-            return c.names.setInterval
-        })
-    ;
-};
-
 function nameFunction (name, src) {
     return src.replace(/^function \(/, 'function ' + name + '(');
 }
