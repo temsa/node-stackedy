@@ -2,9 +2,7 @@ function f () {
     try {
         throw 'a'
     }
-    catch (err) {
-        throw 'b'
-    }
+    catch (err) {}
 }
 
 try { f() }

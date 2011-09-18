@@ -10,7 +10,6 @@ var src = fs.readdirSync(__dirname + '/trace')
     }, {})
 ;
 
-/*
 test('traceCalls', function (t) {
     t.plan(10);
     var stack = stackedy(src.calls, { filename : 'zoom.js' }).run();
@@ -93,7 +92,6 @@ test('traceNested', function (t) {
     });
 });
 
-*/
 test('delay', function (t) {
     t.plan(5);
     var stack = stackedy(src.delay, { filename : 'zoom.js' }).run();
@@ -127,7 +125,6 @@ test('nestDelay', function (t) {
     });
 });
 
-/*
 test('caught', function (t) {
     var stack = stackedy(src.caught).run();
     
@@ -153,4 +150,3 @@ test('uncaught', function (t) {
         t.end();
     });
 });
-*/
