@@ -75,15 +75,19 @@ Stack.prototype.compile = function (context, opts) {
     
     var stacks = {};
     context[names.fn] = function (ix, fn) {
-        stacks[ix] = stack.slice();
+        var node = nodes[ix];
+        var stack_ = stacks[ix] = stack.slice();
         
         return function () {
-            if (stack.length === 0) {
-                stack.unshift(nodes[ix]);
-            }
-            else {
-                stack.splice(0);
-            }
+            stack.splice(0);
+            
+            // already pushed to the stack by `names.call`
+            var already = stack_[0] && stack_[0].name === 'call'
+                && stack_[0].functionName
+                && stack_[0].functionName === node.functionName
+            ;
+            if (!already) stack.unshift(nodes[ix]);
+            
             stack.push.apply(stack, stacks[ix]);
             return fn.apply(this, arguments);
         };
@@ -91,10 +95,12 @@ Stack.prototype.compile = function (context, opts) {
     
     context[names.defun] = function (ix, fn) {
         var node = nodes[ix];
-        var already = stack[0].name === 'call' && stack[0].functionName
+        var already = stack[0] && stack[0].name === 'call'
+            && stack[0].functionName
             && stack[0].functionName === node.functionName
         ;
         if (already) {
+            // already pushed to the stack by `names.call`
             return fn;
         }
         else {
