@@ -13,7 +13,10 @@ test('nestDelay', function (t) {
         t.equal(err, 'moo');
         t.deepEqual(
             c.stack.map(function (s) { return s.functionName }),
-            [ null, 'zzz', null, 'yyy', 'xxx', 'setTimeout', 'h', 'g', 'f' ]
+            [
+                null, 'nextTick', 'zzz', null,
+                'yyy', 'xxx', 'setTimeout', 'h', 'g', 'f'
+            ]
         );
         t.end();
     });

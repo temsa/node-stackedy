@@ -206,15 +206,10 @@ Stack.prototype.compile = function (context, opts) {
         }
         else if (node.name === 'defun') {
             var name = node.value[0];
-            var args = node.value[1].join(',');
-            var fnName = burrito.generateName(6);
+            var vars = node.value[1].join(',');
             node.functionName = name;
             
-            var src = node.source().replace(
-                /function (\S+)/, 'function ' + fnName
-            );
-            
-            node.wrap('function ' + name + '(' + args + '){'
+            node.wrap('function ' + name + '(' + vars + '){'
                 + ex(ix, '(%s).apply(this, arguments)')
             + '}');
         }
@@ -269,7 +264,3 @@ Stack.prototype.run = function (context, opts) {
     
     return self;
 };
-
-function nameFunction (name, src) {
-    return src.replace(/^function \(/, 'function ' + name + '(');
-}
