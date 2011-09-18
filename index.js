@@ -233,7 +233,10 @@ Stack.prototype.compile = function (context, opts) {
 };
 
 Stack.prototype.run = function (context, opts) {
+    if (!opts) opts = {};
+    var runner = opts.runner || vm.runInNewContext;
     var c = this.compile(context || {}, opts);
+    
     var self = c.emitter;
     self.current = c.current;
     self.stack = c.stack;
@@ -247,7 +250,7 @@ Stack.prototype.run = function (context, opts) {
     
     process.nextTick(function () {
         try {
-            var res = vm.runInNewContext(
+            var res = runner(
                 '(function () {' + c.source + '})()',
                 c.context
             );

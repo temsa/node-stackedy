@@ -1,7 +1,7 @@
 {
     "name" : "stackedy",
     "description" : "Roll your own stack traces and control program execution through AST manipulation",
-    "version" : "0.0.9",
+    "version" : "0.1.0",
     "repository" : {
         "type" : "git",
         "url" : "git://github.com/substack/node-stackedy.git"
@@ -22,7 +22,7 @@
         "test" : "test"
     },
     "scripts" : {
-        "test" : "node node_modules/tap/bin/tap.js test/*.js || tap test/*.js"
+        "test" : "tap test/*.js"
     },
     "dependencies" : {
         "burrito" : "0.2.x",
