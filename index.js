@@ -56,7 +56,6 @@ Stack.prototype.compile = function (context, opts) {
         call : burrito.generateName(6),
         stat : burrito.generateName(6),
         fn : burrito.generateName(6),
-        defun : burrito.generateName(6),
         stopped : burrito.generateName(6),
         exception : burrito.generateName(6)
     };
@@ -95,19 +94,15 @@ Stack.prototype.compile = function (context, opts) {
         var node = nodes[ix];
         
         return function () {
-            stack.unshift(node);
+            // already on the stack from `names.call`
+            var already = stack[0] && stack[0].name === 'call'
+                && stack[0].functionName
+                && stack[0].functionName === node.functionName
+            ;
+            
+            if (!already) stack.unshift(node);
             var res = fn.apply(this, arguments);
-            stack.shift();
-            return res;
-        };
-    };
-    
-    context[names.defun] = function (ix, fn) {
-        var node = nodes[ix];
-        stack.unshift(node);
-        return function () {
-            var res = fn.apply(this, arguments);
-            stack.shift();
+            if (!already) stack.shift();
             return res;
         };
     };
@@ -262,7 +257,9 @@ Stack.prototype.compile = function (context, opts) {
             node.functionName = name;
             
             node.wrap('function ' + name + '(' + vars + '){'
-                + ex(ix, 'return (%s).apply(this, arguments)')
+                + ex(ix, 'return ' + names.fn
+                    + '(' + ix + ',%s).apply(this, arguments)'
+                )
             + '}');
         }
     }

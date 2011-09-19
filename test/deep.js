@@ -6,7 +6,6 @@ var src = fs.readFileSync(__dirname + '/sources/deep.js', 'utf8');
 
 test('nestDelay', function (t) {
     t.plan(2);
-console.log(stackedy(src).compile().source);
     var stack = stackedy(src).run({ process : process });
     
     stack.on('error', function (err, c) {
