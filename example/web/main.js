@@ -8,16 +8,17 @@ var src = [
 ].join('\n');
 
 window.onload = function () {
-    var stack = stackedy(src, { filename : 'stax.js' });
-    var runner = stack.run();
-    runner.on('error', function (err) {
-        write('Error: ' + err.message);
+    var stack = stackedy(src, { filename : 'stax.js' }).run();
+    stack.once('error', function (err, c) {
+        stack.stop();
+        write('Error: ' + err);
         
-        var c = err.current || err.stack[0] || { start : {}, stack : [] };
-        write('  in ' + c.filename + ' at line ' + c.start.line);
+        var cur = c.current;
         
-        for (var i = 0; i < err.stack.length; i++) {
-            var s = err.stack[i];
+        write('  in ' + cur.filename + ' at line ' + cur.start.line);
+        
+        for (var i = 0; i < c.stack.length; i++) {
+            var s = c.stack[i];
             write('  in ' + s.filename + ', '
                 + s.functionName + '() at line ' + s.start.line
             );
