@@ -17,7 +17,7 @@ test('delay', function (t) {
         
         t.deepEqual(
             c.stack.map(function (s) { return s.functionName }),
-            [ 'setTimeout', 'h', 'g', 'f' ]
+            [ null, 'setTimeout', 'h', 'g', 'f' ]
         );
         
         t.end();

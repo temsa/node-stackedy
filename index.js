@@ -62,18 +62,19 @@ Stack.prototype.compile = function (context, opts) {
     };
     
     var stack = compiled.stack = [];
+    var stacks = {};
     
     context[names.call] = function (ix) {
         var node = nodes[ix];
         stack.unshift(node);
         
         return function (expr) {
-            stack.shift();
+            var i = stack.indexOf(node);
+            if (i >= 0) stack.splice(i, 1);
             return expr;
         };
     };
     
-    var stacks = {};
     context[names.fn] = function (ix, fn) {
         var node = nodes[ix];
         var stack_ = stacks[ix] = stack.slice();
@@ -86,39 +87,33 @@ Stack.prototype.compile = function (context, opts) {
                 && stack_[0].functionName
                 && stack_[0].functionName === node.functionName
             ;
-            if (!already) stack_.unshift(nodes[ix]);
+            if (!already) stack_.unshift(node);
             
             stack.push.apply(stack, stack_);
             var res = fn.apply(this, arguments);
             
-            if (!already) stack.shift();
+            if (!already) {
+                var i = stack.indexOf(node);
+                if (i >= 0) stack.splice(i, 1);
+            }
             return res;
         };
     };
     
     context[names.defun] = function (ix, fn) {
         var node = nodes[ix];
-        var already = stack[0] && stack[0].name === 'call'
-            && stack[0].functionName
-            && stack[0].functionName === node.functionName
-        ;
-        if (already) {
-            // already pushed to the stack by `names.call`
-            return fn;
-        }
-        else {
-            stack.unshift(nodes[ix]);
-            return function () {
-                var res = fn.apply(this, arguments);
-                stack.shift();
-                return res;
-            };
-        }
+        stack.unshift(node);
+        return function () {
+            var res = fn.apply(this, arguments);
+            var i = stack.indexOf(node);
+            if (i >= 0) stack.splice(i, 1);
+            return res;
+        };
     };
     
     context[names.exception] = function (ix, err) {
         compiled.emitter.emit('error', err, {
-            stack : stacks[ix] || compiled.stack.slice(),
+            stack : stacks[ix] || stack.slice(),
             current : compiled.current
         });
         return !stopped;
@@ -217,7 +212,12 @@ Stack.prototype.compile = function (context, opts) {
         if (node.name === 'call') {
             node.functionName = burrito.label(node);
             node.filename = whichFile(node.start.line);
-            node.wrap(names.call + '(' + ix + ')(%s)');
+            
+            var fn = burrito(node.value[0], wrapper).replace(/;$/, '');
+            var args = burrito([ 'array', node.value[1] ], wrapper).replace(/;$/, '');
+//console.log('fn = ' + fn);
+//console.log('args = ' + args);
+            node.wrap(names.call + '(' + ix + ',' + fn + ',' + args + ')');
         }
         else if (node.name === 'stat' || node.name === 'throw') {
             node.filename = whichFile(node.start.line);
@@ -269,6 +269,7 @@ Stack.prototype.run = function (context, opts) {
     
     self.stop = function () {
         self.removeAllListeners('error');
+        self.on('error', function () {});
         
         c.stop();
         self.emit('stop');

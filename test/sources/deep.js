@@ -14,6 +14,10 @@ f();
 
 function zzz () {
     process.nextTick(function () {
-        throw 'moo'
+        qualia(5);
     });
+}
+
+function qualia (n) {
+    throw 'moo'
 }
