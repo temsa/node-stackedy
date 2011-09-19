@@ -1,24 +1,15 @@
-var stackedy = require('../');
 var test = require('tap').test;
 var path = require('path');
 
-var t = null;
-var stack = stackedy();
-module.exports = function (fn, context) {
-    t.ok(true);
-    stack.include('(' + fn.toString() + ')()', {
-        filename : context.__filename,
-        context : context
-    });
-};
+var stack = require('./sources/multifile/wrap').stack;
 
-test('multifile', function (t_) {
-    t = t_;
-    t.plan(5);
+test('multifile', function (t) {
+    t.plan(3);
     require('./sources/multifile/a');
     var run = stack.run();
     
     run.on('error', function (err, c) {
+console.log('CAUGHT!');
         run.stop();
         
         t.equal(err, 'beep boop');

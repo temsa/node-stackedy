@@ -1,7 +1,9 @@
-require('../../multifile')(function () {
+require('./wrap')(function () {
     var b = require('./b');
+console.dir(b);
     
     (function () {
+console.dir(b);
         setTimeout(b.zzz, 10);
     })();
-}, { require : require, __filename : __filename });
+}, { console : console, require : require, __filename : __filename });

@@ -58,7 +58,8 @@ Stack.prototype.compile = function (context, opts) {
         fn : burrito.generateName(6),
         stopped : burrito.generateName(6),
         exception : burrito.generateName(6),
-        anonymous : burrito.generateName(6)
+        anonymous : burrito.generateName(6),
+        contexts : burrito.generateName(6)
     };
     
     var stack = compiled.stack = [];
@@ -81,12 +82,10 @@ Stack.prototype.compile = function (context, opts) {
             }
         }
         
-        if (that) {
-            var res = that[fn].apply(that, args);
-        }
-        else {
-            fn.apply(that, args);
-        }
+        var res = that
+            ? that[fn].apply(that, args)
+            : fn.apply(that, args)
+        ;
         stack.shift();
         return res;
     };
@@ -165,31 +164,7 @@ Stack.prototype.compile = function (context, opts) {
         else compiled.current = nodes[i];
     };
     
-    var preSrc = (function () {
-        var xs = [];
-        for (var i = 0; i < self.sources.length; i++) {
-            xs.push(self.sources[i].source);
-        }
-        return xs.join('\n');
-    })();
-    
-    var offsets = (function () {
-        var xs = [];
-        for (var i = 0; i < self.sources.length; i++) {
-            var s = self.sources[i];
-            xs.push(s.source.length + (xs[i-1] || 0));
-        }
-        return xs;
-    })();
-    
-    function whichFile (n) {
-        var sum = 0;
-        for (var i = 0; i < offsets.length && n < sum; i++) {
-            sum += offsets[i];
-        }
-        
-        return self.sources[i].filename;
-    }
+    context[names.contexts] = {};
     
     var ex = function (ix, s) {
         return 'try {' + s + '}'
@@ -267,17 +242,59 @@ Stack.prototype.compile = function (context, opts) {
         }
     }
     
-    try {
-        compiled.source = burrito(preSrc, wrapper);
+    var offsets = (function () {
+        var xs = [];
+        for (var i = 0; i < self.sources.length; i++) {
+            var s = self.sources[i];
+            xs.push(s.source.length + (xs[i-1] || 0));
+        }
+        return xs;
+    })();
+    
+    function whichFile (n) {
+        var sum = 0;
+        for (var i = 0; i < offsets.length && n < sum; i++) {
+            sum += offsets[i];
+        }
+        return self.sources[i].filename;
     }
-    catch (err) {
-        process.nextTick(function () {
-            compiled.emitter.emit('error', err, {
-                stack : stack.concat(node, stack_),
-                current : compiled.current
-            });
-        });
-    }
+    
+    compiled.source = (function () {
+        var xs = [];
+        for (var i = 0; i < self.sources.length; i++) {
+            var s = self.sources[i];
+            try {
+                var src = burrito(s.source, wrapper);
+                if (s.context) {
+                    // file-specific context
+                    var keys = [];
+                    var args = context[names.contexts][i] = [];
+                    for (var key in s.context) {
+                        keys.push(key);
+                        args.push(s.context[key]);
+                    }
+                    
+                    xs.push(
+                        '(function (' + keys.join(',') + ') {'
+                        + src
+                        + '}).apply(null, ' + names.contexts + '[' + i + '])'
+                    );
+                }
+                else {
+                    xs.push(src);
+                }
+            }
+            catch (err) {
+                process.nextTick(function () {
+                    compiled.emitter.emit('error', err, {
+                        stack : stack.slice(),
+                        current : compiled.current
+                    });
+                });
+            }
+        }
+        return xs.join('\n');
+    })();
     
     return compiled;
 };
@@ -301,10 +318,7 @@ Stack.prototype.run = function (context, opts) {
     
     process.nextTick(function () {
         try {
-            var res = runner(
-                '(function () {' + c.source + '})()',
-                c.context
-            );
+            var res = runner('(function () {' + c.source + '})()', c.context);
             self.emit('result', res);
         }
         catch (err) {
