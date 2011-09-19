@@ -1,4 +1,4 @@
 (function () {
     t.ok(true);
-    throw 'stopped'
-})()
+    throw 'stopped';
+})();

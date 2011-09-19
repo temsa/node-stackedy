@@ -19,7 +19,6 @@ var src = {
                     cb();
                 }, 50);
             },
-            console : console,
             exports : {},
             t : t
         };

@@ -172,8 +172,6 @@ Stack.prototype.compile = function (context, opts) {
         return xs.join('\n');
     })();
     
-    lines = preSrc.split('\n');
-    
     var offsets = (function () {
         var xs = [];
         for (var i = 0; i < self.sources.length; i++) {
@@ -202,7 +200,6 @@ Stack.prototype.compile = function (context, opts) {
     };
     
     function wrapper (node) {
-        node.lines = lines.slice(node.start.line, node.end.line + 1);
         var ix = nodes.push(node) - 1;
         
         if (node.name === 'call') {
@@ -220,7 +217,10 @@ Stack.prototype.compile = function (context, opts) {
                 fn = json.stringify(node.value[0][node.value[0].length-1]);
                 that = burrito(node.value[0][1], wrapper).replace(/;$/, '');
             }
-            else if (node.value[0][0].name) {
+            else if (node.value[0][0].name === 'function') {
+                // terrible hackfix for self-executing functions:
+                if (node.value[0][1] === null) node.value[0][1] = '__anonymous';
+                
                 fn = burrito(
                     [ node.value[0][0].name ].concat(node.value[0].slice(1)),
                     wrapper
@@ -244,7 +244,7 @@ Stack.prototype.compile = function (context, opts) {
             node.functionName = burrito.label(node);
             node.wrap('(function () {'
                 + ex(ix, 'return ' + names.fn
-                    + '(' + ix + ',%s).apply(this, arguments)'
+                    + '(' + ix + ',(%s)).apply(this, arguments)'
                 )
             + '})');
         }
