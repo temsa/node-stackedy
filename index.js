@@ -64,23 +64,33 @@ Stack.prototype.compile = function (context, opts) {
     var stack = compiled.stack = [];
     var stacks = {};
     
-    context[names.call] = function (ix) {
+    context[names.call] = function (ix, fn, args) {
         var node = nodes[ix];
         stack.unshift(node);
+        var stack_ = stacks[ix] = stack.slice();
         
-        return function (expr) {
-            var i = stack.indexOf(node);
-            if (i >= 0) stack.splice(i, 1);
-            return expr;
-        };
+        for (var i = 0; i < args.length; i++) {
+            var arg = args[i];
+            if (typeof arg === 'function') {
+                args[i] = function () {
+                    stack = stack_;
+                    return arg.apply(this, arguments);
+                };
+            }
+        }
+        
+        var res = fn.apply(this, args);
+        stack.shift();
+        return res;
     };
     
+    /*
     context[names.fn] = function (ix, fn) {
         var node = nodes[ix];
         var stack_ = stacks[ix] = stack.slice();
         
         return function () {
-            stack.splice(0);
+            //stack.splice(0);
             
             // already pushed to the stack by `names.call`
             var already = stack_[0] && stack_[0].name === 'call'
@@ -110,6 +120,7 @@ Stack.prototype.compile = function (context, opts) {
             return res;
         };
     };
+    */
     
     context[names.exception] = function (ix, err) {
         compiled.emitter.emit('error', err, {
@@ -215,8 +226,6 @@ Stack.prototype.compile = function (context, opts) {
             
             var fn = burrito(node.value[0], wrapper).replace(/;$/, '');
             var args = burrito([ 'array', node.value[1] ], wrapper).replace(/;$/, '');
-//console.log('fn = ' + fn);
-//console.log('args = ' + args);
             node.wrap(names.call + '(' + ix + ',' + fn + ',' + args + ')');
         }
         else if (node.name === 'stat' || node.name === 'throw') {
@@ -225,9 +234,9 @@ Stack.prototype.compile = function (context, opts) {
         }
         else if (node.name === 'function') {
             node.functionName = burrito.label(node);
-            node.wrap(names.fn + '(' + ix + ', (function () {'
+            node.wrap('(function () {'
                 + ex(ix, 'return (%s).apply(this, arguments)')
-            + '}))');
+            + '})');
         }
         else if (node.name === 'block') {
             node.wrap('{' + ex(ix, '%s') + '}');
@@ -238,7 +247,7 @@ Stack.prototype.compile = function (context, opts) {
             node.functionName = name;
             
             node.wrap('function ' + name + '(' + vars + '){'
-                + ex(ix, names.defun + '(' + ix + ', %s).apply(this, arguments)')
+                + ex(ix, 'return (%s).apply(this, arguments)')
             + '}');
         }
     }
