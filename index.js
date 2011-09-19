@@ -93,38 +93,24 @@ Stack.prototype.compile = function (context, opts) {
     
     context[names.fn] = function (ix, fn) {
         var node = nodes[ix];
-        var stack_ = stacks[ix] = stack.slice();
         
         return function () {
-            //stack.splice(0);
-            
-            // already pushed to the stack by `names.call`
-            var already = stack_[0] && stack_[0].name === 'call'
-                && stack_[0].functionName
-                && stack_[0].functionName === node.functionName
-            ;
-            if (!already) stack_.unshift(node);
-            
-            stack.push.apply(stack, stack_);
+            stack.unshift(node);
             var res = fn.apply(this, arguments);
-            
-            if (!already) stack.shift();
+            stack.shift();
             return res;
         };
     };
     
-    /*
     context[names.defun] = function (ix, fn) {
         var node = nodes[ix];
         stack.unshift(node);
         return function () {
             var res = fn.apply(this, arguments);
-            var i = stack.indexOf(node);
-            if (i >= 0) stack.splice(i, 1);
+            stack.shift();
             return res;
         };
     };
-    */
     
     context[names.exception] = function (ix, err) {
         compiled.emitter.emit('error', err, {
@@ -238,6 +224,12 @@ Stack.prototype.compile = function (context, opts) {
             else if (node.value[0][0] === 'dot') {
                 fn = json.stringify(node.value[0][node.value[0].length-1]);
                 that = burrito(node.value[0][1], wrapper).replace(/;$/, '');
+            }
+            else if (node.value[0][0].name) {
+                fn = burrito(
+                    [ node.value[0][0].name ].concat(node.value[0].slice(1)),
+                    wrapper
+                ).replace(/;$/, '');
             }
             else {
                 fn = burrito(node.value[0], wrapper).replace(/;$/, '');
