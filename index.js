@@ -57,7 +57,8 @@ Stack.prototype.compile = function (context, opts) {
         stat : burrito.generateName(6),
         fn : burrito.generateName(6),
         stopped : burrito.generateName(6),
-        exception : burrito.generateName(6)
+        exception : burrito.generateName(6),
+        anonymous : burrito.generateName(6)
     };
     
     var stack = compiled.stack = [];
@@ -219,7 +220,9 @@ Stack.prototype.compile = function (context, opts) {
             }
             else if (node.value[0][0].name === 'function') {
                 // terrible hackfix for self-executing functions:
-                if (node.value[0][1] === null) node.value[0][1] = '__anonymous';
+                if (node.value[0][1] === null) {
+                    node.value[0][1] = names.anonymous;
+                }
                 
                 fn = burrito(
                     [ node.value[0][0].name ].concat(node.value[0].slice(1)),
