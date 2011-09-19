@@ -72,10 +72,12 @@ Stack.prototype.compile = function (context, opts) {
         for (var i = 0; i < args.length; i++) {
             var arg = args[i];
             if (typeof arg === 'function') {
-                args[i] = function () {
-                    stack = stack_;
-                    return arg.apply(this, arguments);
-                };
+                args[i] = (function (f) {
+                    return function () {
+                        stack = stack_;
+                        return f.apply(this, arguments);
+                    };
+                })(arg);
             }
         }
         
@@ -224,8 +226,12 @@ Stack.prototype.compile = function (context, opts) {
             node.functionName = burrito.label(node);
             node.filename = whichFile(node.start.line);
             
-            var fn = burrito(node.value[0], wrapper).replace(/;$/, '');
-            var args = burrito([ 'array', node.value[1] ], wrapper).replace(/;$/, '');
+            var fn = burrito(node.value[0], wrapper)
+                .replace(/;$/, '');
+            var args = burrito([ 'array', node.value[1] ], wrapper)
+                .replace(/;$/, '');
+//console.log('fn = ' + fn);
+//console.log('args = ' + args);
             node.wrap(names.call + '(' + ix + ',' + fn + ',' + args + ')');
         }
         else if (node.name === 'stat' || node.name === 'throw') {
