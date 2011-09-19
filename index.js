@@ -64,7 +64,7 @@ Stack.prototype.compile = function (context, opts) {
     var stack = compiled.stack = [];
     var stacks = {};
     
-    context[names.call] = function (ix, fn, args) {
+    context[names.call] = function (ix, that, fn, args) {
         var node = nodes[ix];
         stack.unshift(node);
         var stack_ = stacks[ix] = stack.slice();
@@ -81,12 +81,16 @@ Stack.prototype.compile = function (context, opts) {
             }
         }
         
-        var res = fn.apply(this, args);
+        if (that) {
+            var res = that[fn].apply(that, args);
+        }
+        else {
+            fn.apply(that, args);
+        }
         stack.shift();
         return res;
     };
     
-    /*
     context[names.fn] = function (ix, fn) {
         var node = nodes[ix];
         var stack_ = stacks[ix] = stack.slice();
@@ -104,14 +108,12 @@ Stack.prototype.compile = function (context, opts) {
             stack.push.apply(stack, stack_);
             var res = fn.apply(this, arguments);
             
-            if (!already) {
-                var i = stack.indexOf(node);
-                if (i >= 0) stack.splice(i, 1);
-            }
+            if (!already) stack.shift();
             return res;
         };
     };
     
+    /*
     context[names.defun] = function (ix, fn) {
         var node = nodes[ix];
         stack.unshift(node);
@@ -226,13 +228,26 @@ Stack.prototype.compile = function (context, opts) {
             node.functionName = burrito.label(node);
             node.filename = whichFile(node.start.line);
             
-            var fn = burrito(node.value[0], wrapper)
-                .replace(/;$/, '');
+            var that = null;
+            var fn = null;
+            
+            if (node.value[0][0] === 'name') {
+                fn = node.value[0][1];
+                that = null;
+            }
+            else if (node.value[0][0] === 'dot') {
+                fn = json.stringify(node.value[0][node.value[0].length-1]);
+                that = burrito(node.value[0][1], wrapper).replace(/;$/, '');
+            }
+            else {
+                fn = burrito(node.value[0], wrapper).replace(/;$/, '');
+                that = null;
+            }
             var args = burrito([ 'array', node.value[1] ], wrapper)
                 .replace(/;$/, '');
-//console.log('fn = ' + fn);
-//console.log('args = ' + args);
-            node.wrap(names.call + '(' + ix + ',' + fn + ',' + args + ')');
+            node.wrap(
+                names.call + '(' + ix + ',' + that + ',' + fn + ',' + args + ')'
+            );
         }
         else if (node.name === 'stat' || node.name === 'throw') {
             node.filename = whichFile(node.start.line);
@@ -241,7 +256,9 @@ Stack.prototype.compile = function (context, opts) {
         else if (node.name === 'function') {
             node.functionName = burrito.label(node);
             node.wrap('(function () {'
-                + ex(ix, 'return (%s).apply(this, arguments)')
+                + ex(ix, 'return ' + names.fn
+                    + '(' + ix + ',%s).apply(this, arguments)'
+                )
             + '})');
         }
         else if (node.name === 'block') {
