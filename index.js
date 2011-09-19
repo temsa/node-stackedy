@@ -58,8 +58,7 @@ Stack.prototype.compile = function (context, opts) {
         fn : burrito.generateName(6),
         stopped : burrito.generateName(6),
         exception : burrito.generateName(6),
-        anonymous : burrito.generateName(6),
-        contexts : burrito.generateName(6)
+        anonymous : burrito.generateName(6)
     };
     
     var stack = compiled.stack = [];
@@ -164,8 +163,6 @@ Stack.prototype.compile = function (context, opts) {
         else compiled.current = nodes[i];
     };
     
-    context[names.contexts] = {};
-    
     var ex = function (ix, s) {
         return 'try {' + s + '}'
         + 'catch (err) {'
@@ -264,25 +261,11 @@ Stack.prototype.compile = function (context, opts) {
         for (var i = 0; i < self.sources.length; i++) {
             var s = self.sources[i];
             try {
-                var src = burrito(s.source, wrapper);
-                if (s.context) {
-                    // file-specific context
-                    var keys = [];
-                    var args = context[names.contexts][i] = [];
-                    for (var key in s.context) {
-                        keys.push(key);
-                        args.push(s.context[key]);
-                    }
-                    
-                    xs.push(
-                        '(function (' + keys.join(',') + ') {'
-                        + src
-                        + '}).apply(null, ' + names.contexts + '[' + i + '])'
-                    );
-                }
-                else {
-                    xs.push(src);
-                }
+                var src = burrito(
+                    s.preFilter ? s.preFilter(s.source) : s.source,
+                    wrapper
+                );
+                xs.push(s.postFilter ? s.postFilter(src) : src);
             }
             catch (err) {
                 process.nextTick(function () {
@@ -307,6 +290,7 @@ Stack.prototype.run = function (context, opts) {
     var self = c.emitter;
     self.current = c.current;
     self.stack = c.stack;
+    self.context = c.context;
     
     self.stop = function () {
         self.removeAllListeners('error');

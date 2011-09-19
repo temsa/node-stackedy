@@ -1,7 +1,5 @@
-require('./wrap')(function () {
-    exports.zzz = function () {
-        setTimeout(function () {
-            throw 'beep boop';
-        });
-    };
-}, { console : console, exports : exports, __filename : __filename });
+exports.zzz = function zzz () {
+    setTimeout(function () {
+        throw 'beep boop';
+    }, 20);
+};
