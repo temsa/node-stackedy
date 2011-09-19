@@ -172,12 +172,13 @@ Stack.prototype.compile = function (context, opts) {
         + '}'
     };
     
-    function wrapper (node) {
+    function wrapper (filename, node) {
+        var wrapper_ = function (n) { return wrapper(filename, n) };
+        node.filename = filename;
         var ix = nodes.push(node) - 1;
         
         if (node.name === 'call') {
             node.functionName = burrito.label(node);
-            node.filename = whichFile(node.start.line);
             
             var that = null;
             var fn = null;
@@ -188,7 +189,7 @@ Stack.prototype.compile = function (context, opts) {
             }
             else if (node.value[0][0] === 'dot') {
                 fn = json.stringify(node.value[0][node.value[0].length-1]);
-                that = burrito(node.value[0][1], wrapper).replace(/;$/, '');
+                that = burrito(node.value[0][1], wrapper_).replace(/;$/, '');
             }
             else if (node.value[0][0].name === 'function') {
                 // terrible hackfix for self-executing functions:
@@ -198,21 +199,20 @@ Stack.prototype.compile = function (context, opts) {
                 
                 fn = burrito(
                     [ node.value[0][0].name ].concat(node.value[0].slice(1)),
-                    wrapper
+                    wrapper_
                 ).replace(/;$/, '');
             }
             else {
-                fn = burrito(node.value[0], wrapper).replace(/;$/, '');
+                fn = burrito(node.value[0], wrapper_).replace(/;$/, '');
                 that = null;
             }
-            var args = burrito([ 'array', node.value[1] ], wrapper)
+            var args = burrito([ 'array', node.value[1] ], wrapper_)
                 .replace(/;$/, '');
             node.wrap(
                 names.call + '(' + ix + ',' + that + ',' + fn + ',' + args + ')'
             );
         }
         else if (node.name === 'stat' || node.name === 'throw') {
-            node.filename = whichFile(node.start.line);
             node.wrap('{' + names.stat + '(' + ix + ');%s}');
         }
         else if (node.name === 'function') {
@@ -239,23 +239,6 @@ Stack.prototype.compile = function (context, opts) {
         }
     }
     
-    var offsets = (function () {
-        var xs = [];
-        for (var i = 0; i < self.sources.length; i++) {
-            var s = self.sources[i];
-            xs.push(s.source.length + (xs[i-1] || 0));
-        }
-        return xs;
-    })();
-    
-    function whichFile (n) {
-        var sum = 0;
-        for (var i = 0; i < offsets.length && n < sum; i++) {
-            sum += offsets[i];
-        }
-        return self.sources[i].filename;
-    }
-    
     compiled.source = (function () {
         var xs = [];
         for (var i = 0; i < self.sources.length; i++) {
@@ -263,7 +246,7 @@ Stack.prototype.compile = function (context, opts) {
             try {
                 var src = burrito(
                     s.preFilter ? s.preFilter(s.source) : s.source,
-                    wrapper
+                    function (n) { return wrapper(s.filename, n) }
                 );
                 xs.push(s.postFilter ? s.postFilter(src) : src);
             }
