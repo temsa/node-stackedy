@@ -43,7 +43,7 @@ Stack.prototype.include = function (src, opts) {
 
 Stack.prototype.compile = function (context, opts) {
     var self = this;
-    var compiled = { emitter : new EventEmitter };
+    var compiled = new EventEmitter;
     
     if (!context) context = {};
     if (!opts) opts = {};
@@ -74,7 +74,8 @@ Stack.prototype.compile = function (context, opts) {
             if (typeof arg === 'function') {
                 args[i] = (function (f) {
                     return function () {
-                        stack = stack_;
+                        stack.splice(0);
+                        stack.push.apply(stack, stack_);
                         return f.apply(this, arguments);
                     };
                 })(arg);
@@ -107,7 +108,7 @@ Stack.prototype.compile = function (context, opts) {
     };
     
     context[names.exception] = function (ix, err) {
-        compiled.emitter.emit('error', err, {
+        compiled.emit('error', err, {
             stack : stacks[ix] || stack.slice(),
             current : compiled.current
         });
@@ -252,7 +253,7 @@ Stack.prototype.compile = function (context, opts) {
             }
             catch (err) {
                 process.nextTick(function () {
-                    compiled.emitter.emit('error', err, {
+                    compiled.emit('error', err, {
                         stack : stack.slice(),
                         current : compiled.current
                     });
@@ -268,30 +269,28 @@ Stack.prototype.compile = function (context, opts) {
 Stack.prototype.run = function (context, opts) {
     if (!opts) opts = {};
     var runner = opts.runner || vm.runInNewContext;
-    var c = this.compile(context || {}, opts);
+    var self = this.compile(context || {}, opts);
     
-    var self = c.emitter;
-    self.current = c.current;
-    self.stack = c.stack;
-    self.context = c.context;
-    
+    var _stop = self.stop;
     self.stop = function () {
         self.removeAllListeners('error');
         self.on('error', function () {});
-        
-        c.stop();
+        _stop();
         self.emit('stop');
     };
     
     process.nextTick(function () {
         try {
-            var res = runner('(function () {' + c.source + '})()', c.context);
+            var res = runner(
+                '(function () {' + self.source + '})()',
+                self.context
+            );
             self.emit('result', res);
         }
         catch (err) {
             self.emit('error', err, {
-                stack : c.stack.slice(),
-                current : c.current
+                stack : self.stack.slice(),
+                current : self.current
             });
         }
     });
