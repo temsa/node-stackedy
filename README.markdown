@@ -76,6 +76,9 @@ stopped with `.stop()`.
 `opts.runner(src, context)` is the function used to run the transformed source.
 It defaults to `vm.runInNewContext`.
 
+`opts.global` is the context to use when `this` is `null`, such as `window` in a
+browser environment.
+
 stack.compile(context={}, opts)
 -------------------------------
 
