@@ -1,17 +1,18 @@
 var stackedy = require('stackedy');
+var json = typeof JSON === 'object' ? JSON : require('jsonify');
 
 var src = [
     'function f () { g() }',
-    'function g () { h() }',
+    'function g () { setTimeout(h, 1000) }',
     'function h () { throw "moo" }',
     'f();'
 ].join('\n');
 
 window.onload = function () {
-    var stack = stackedy(src, { filename : 'stax.js' }).run();
+    var stack = stackedy(src, { filename : 'stax.js', stoppable : false }).run();
     stack.once('error', function (err, c) {
-        stack.stop();
-        write('Error: ' + err);
+        //stack.stop();
+        write('Error: ' + json.stringify(err));
         
         var cur = c.current;
         
@@ -28,5 +29,5 @@ window.onload = function () {
 if (document.readyState === 'complete') window.onload();
 
 function write (msg) {
-    document.getElementById('output').innerHTML += msg + '\n';
+    document.getElementById('output').innerHTML += msg + '<br>\n';
 }
