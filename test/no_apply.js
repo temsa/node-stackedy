@@ -2,7 +2,7 @@ var stackedy = require('../');
 var test = require('tap').test;
 
 var fs = require('fs');
-var src = fs.readFileSync(__dirname + '/sources/timeout.js', 'utf8');
+var src = fs.readFileSync(__dirname + '/sources/no_apply.js', 'utf8');
 
 test('setTimeout has no .apply in the IEs', function (t) {
     t.plan(1);
@@ -12,7 +12,10 @@ test('setTimeout has no .apply in the IEs', function (t) {
     to.apply = null;
     
     var context = {
-        t : t,
+        done : function (n) {
+            t.equal(n, 5);
+            t.end();
+        },
         setTimeout : to
     };
     

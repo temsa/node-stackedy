@@ -1,3 +1,3 @@
 setTimeout(function () {
-    t.end();
+    done(5);
 }, 50);

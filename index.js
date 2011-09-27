@@ -76,16 +76,31 @@ Stack.prototype.compile = function (context, opts) {
                     return function () {
                         stack.splice(0);
                         stack.push.apply(stack, stack_);
-                        return f.apply(this, arguments);
+                        if (f.apply) {
+                            return f.apply(this, arguments);
+                        }
+                        else {
+                            return apply(f, this, arguments);
+                        }
                     };
                 })(arg);
             }
         }
         
-        var res = that
-            ? that[fn].apply(that, args)
-            : fn.apply(that, args)
-        ;
+        var res;
+        if (that) {
+            res = that[fn].apply
+                ? that[fn].apply(that, args)
+                : apply(that[fn], that, args)
+            ;
+        }
+        else {
+            res = fn.apply
+                ? fn.apply(that, args)
+                : apply(fn, that, args)
+            ;
+        }
+        
         stack.shift();
         return res;
     };
@@ -297,3 +312,19 @@ Stack.prototype.run = function (context, opts) {
     
     return self;
 };
+
+function apply (fn, that, args) {
+    switch (args.length) {
+        case 0 : return fn()
+        case 1 : return fn(args[0])
+        case 2 : return fn(args[0], args[1])
+        case 3 : return fn(args[0], args[1], args[2])
+        default :
+            var sig = [];
+            for (var i = 0; i < args.length; i++) sig.push('args[' + i + ']');
+            return Function(
+                [ 'fn', 'args' ],
+                'return fn(' + sig.join(',') + ')'
+            )(fn, args);
+    }
+}

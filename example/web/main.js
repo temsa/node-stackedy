@@ -9,7 +9,9 @@ var src = [
 ].join('\n');
 
 window.onload = function () {
-    var stack = stackedy(src, { filename : 'stax.js', stoppable : false }).run();
+    var stack = stackedy(src, { filename : 'stax.js', stoppable : false })
+        .run({ global : window });
+    
     stack.once('error', function (err, c) {
         //stack.stop();
         write('Error: ' + json.stringify(err));
