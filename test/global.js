@@ -9,10 +9,12 @@ test('setTimeout context for IE9 must be window', function (t) {
     var global = {};
     
     var to = function () {
-        return setTimeout.apply(this, arguments);
+        t.fail('should have been called with .apply()')
     };
+    
     to.apply = function () {
-        t.equal(this, global);
+        t.equal(arguments[0], global);
+        return setTimeout.apply.apply(setTimeout, arguments);
     };
     
     var context = {
@@ -20,7 +22,8 @@ test('setTimeout context for IE9 must be window', function (t) {
             t.equal(n, 5);
             t.end();
         },
-        setTimeout : to
+        setTimeout : to,
+        console : console
     };
     
     var stack = stackedy(src).run(context, {

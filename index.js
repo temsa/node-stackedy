@@ -94,6 +94,12 @@ Stack.prototype.compile = function (context, opts) {
                 : apply(that[fn], that, args)
             ;
         }
+        else if (opts.hasOwnProperty('global')) {
+            res = fn.apply
+                ? fn.apply(opts.global, args)
+                : apply(fn, opts.global, args)
+            ;
+        }
         else {
             res = fn.apply
                 ? fn.apply(that, args)
@@ -216,7 +222,6 @@ Stack.prototype.compile = function (context, opts) {
             
             if (node.value[0][0] === 'name') {
                 fn = node.value[0][1];
-                that = null;
             }
             else if (node.value[0][0] === 'dot') {
                 fn = json.stringify(node.value[0][node.value[0].length-1]);
@@ -235,8 +240,8 @@ Stack.prototype.compile = function (context, opts) {
             }
             else {
                 fn = burrito(node.value[0], wrapper_).replace(/;$/, '');
-                that = null;
             }
+            
             var args = burrito([ 'array', node.value[1] ], wrapper_)
                 .replace(/;$/, '');
             node.wrap(
