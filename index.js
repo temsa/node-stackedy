@@ -116,7 +116,10 @@ Stack.prototype.compile = function (context, opts) {
             ;
             
             if (!already) stack.unshift(node);
-            var res = fn.apply(this, arguments);
+            var res = fn.apply
+                ? fn.apply(this, arguments)
+                : apply(fn, this, arguments);
+            ;
             if (!already) stack.shift();
             return res;
         };
@@ -136,26 +139,38 @@ Stack.prototype.compile = function (context, opts) {
     
     if (opts.stoppable) {
         context.setInterval = function () {
-            var iv = setInterval.apply(this, arguments);
+            var iv = setInterval.apply
+                ? setInterval.apply(this, arguments)
+                : apply(setInterval, this, arguments)
+            ;
             intervals.push(iv);
             return iv;
         };
         
         context.clearInterval = function (iv) {
-            var res = clearInterval.apply(this, arguments);
+            var res = clearInterval.apply
+                ? clearInterval.apply(this, arguments)
+                : apply(clearInterval, this, arguments)
+            ;
             var i = intervals.indexOf(iv);
             if (i >= 0) intervals.splice(i, 1);
             return res;
         };
         
         context.setTimeout = function () {
-            var to = setTimeout.apply(this, arguments);
+            var to = setTimeout.apply
+                ? setTimeout.apply(this, arguments)
+                : apply(setTimeout, this, arguments)
+            ;
             timeouts.push(to);
             return to;
         };
         
         context.clearTimeout = function (to) {
-            var res = clearTimeout.apply(this, arguments);
+            var res = clearTimeout.apply
+                ? clearTimeout.apply(this, arguments)
+                : apply(clearTimeout, this, arguments)
+            ;
             var i = timeouts.indexOf(to);
             if (i >= 0) timeouts.splice(i, 1);
             return res;
