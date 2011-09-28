@@ -260,7 +260,7 @@ Stack.prototype.compile = function (context, opts) {
             + '})');
         }
         else if (node.name === 'block') {
-            node.wrap('{' + ex(ix, '%s') + '}');
+            //node.wrap('{' + ex(ix, '%s') + '}');
         }
         else if (node.name === 'defun') {
             var name = node.value[0];
