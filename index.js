@@ -264,11 +264,18 @@ Stack.prototype.compile = function (context, opts) {
             var vars = node.value[1].join(',');
             node.functionName = name;
             
-            node.wrap('function ' + name + '(' + vars + '){'
-                + ex(ix, 'return ' + names.fn
-                    + '(' + ix + ',%s).apply(this, arguments)'
-                )
-            + '}');
+            node.wrap(function (s) {
+                var src = s.replace(
+                    /^function[^\(]*([^{]*\{)/,
+                    function (_, x) { return 'function ' + x }
+                );
+                
+                return 'function ' + name + '(' + vars + '){'
+                    + ex(ix, 'return ' + names.fn
+                        + '(' + ix + ',' + src + ').apply(this, arguments)'
+                    )
+                + '}'
+            });
         }
     }
     
