@@ -69,22 +69,25 @@ Stack.prototype.compile = function (context, opts) {
         stack.unshift(node);
         var stack_ = stacks[ix] = stack.slice();
         
+        function wrap (f) {
+            if (typeof f !== 'function') return f;
+            
+            var f_ = function () {
+                stack.splice(0);
+                stack.push.apply(stack, stack_);
+                if (f.apply) {
+                    return f.apply(this, arguments);
+                }
+                else {
+                    return apply(f, this, arguments);
+                }
+            };
+            for (var key in f) f_[key] = wrap(f[key]);
+            return f_;
+        }
+        
         for (var i = 0; i < args.length; i++) {
-            var arg = args[i];
-            if (typeof arg === 'function') {
-                args[i] = (function (f) {
-                    return function () {
-                        stack.splice(0);
-                        stack.push.apply(stack, stack_);
-                        if (f.apply) {
-                            return f.apply(this, arguments);
-                        }
-                        else {
-                            return apply(f, this, arguments);
-                        }
-                    };
-                })(arg);
-            }
+            args[i] = wrap(args[i])
         }
         
         var res;
