@@ -163,13 +163,23 @@ Stack.prototype.compile = function (context, opts) {
             ;
             var i = intervals.indexOf(iv);
             if (i >= 0) intervals.splice(i, 1);
+            if (! intervals.length && ! timeouts.length) {
+              process.nextTick( compiled.emit.bind(this, 'stop', context) );
+            }
             return res;
         };
         
         context.setTimeout = function () {
-            var to = setTimeout.apply
+            function setTimeoutProxy () {
+              setTimeout.apply
                 ? setTimeout.apply(this, arguments)
-                : apply(setTimeout, this, arguments)
+                : apply(setTimeout, this, arguments);
+                
+              if (! intervals.length && ! timeouts.length) {
+                process.nextTick( compiled.emit.bind(this, 'stop', context) );
+              }
+            }
+            var to = setTimeoutProxy.apply(this, arguments)
             ;
             timeouts.push(to);
             return to;
@@ -182,6 +192,9 @@ Stack.prototype.compile = function (context, opts) {
             ;
             var i = timeouts.indexOf(to);
             if (i >= 0) timeouts.splice(i, 1);
+            if (! intervals.length && ! timeouts.length) {
+              process.nextTick( compiled.emit.bind(this, 'stop', context) );
+            }
             return res;
         };
         
@@ -318,15 +331,12 @@ Stack.prototype.run = function (context, opts) {
         self.removeAllListeners('error');
         self.on('error', function () {});
         _stop();
-        self.emit('stop');
+        self.emit('stop', context);
     };
     
     process.nextTick(function () {
         try {
-            var res = runner(
-                '(function () {' + self.source + '})()',
-                self.context
-            );
+            var res = runner( self.source, self.context );
             self.emit('result', res);
         }
         catch (err) {
@@ -355,3 +365,4 @@ function apply (fn, that, args) {
             )(fn, args);
     }
 }
+
