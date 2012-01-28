@@ -144,7 +144,50 @@ Stack.prototype.compile = function (context, opts) {
     
     var intervals = [];
     var timeouts = [];
+    var callbacks = [];
     var stopped = false;
+    
+    compiled.addCallback = function register (callback, count, context) {
+      if(typeof count !== "number") {
+        context = count;
+      }
+      
+      function wrappedCallback(){
+        //was it removed ?
+        if(callbacks.indexOf(wrappedCallback) === -1 )
+          return;
+        var result = callback.apply(context, arguments);
+        compiled.removeCallback(wrappedCallback);
+        return result;
+      }
+      
+      callbacks.push(wrappedCallback);
+      return wrappedCallback;
+    }
+    
+    compiled.removeCallback = function unregister (wrappedCallback) {
+      var i = callbacks.indexOf(wrappedCallback);
+      if (i >= 0) callbacks.splice(i, 1);
+      compiled.checkStopped();
+    }
+
+    compiled.clearCallbacks = function unregisterAll () {
+      callbacks.forEach(function(callback) {compiled.removeCallback(callback)});
+    }
+        
+    compiled.checkStopped = function () {
+      compiled.emit('status', callbacks.length , intervals.length , timeouts.length)
+//try {console.log('check', callbacks.length, intervals.length, timeouts.length)} catch(e){}
+      if (! callbacks.length && ! intervals.length && ! timeouts.length) {
+//try {console.log('stop!')} catch(e){}
+        process.nextTick( function() {
+            if(!stopped)
+              compiled.emit('stop')
+          }.bind(context) );
+        return true;
+      } 
+      return false;
+    }
     
     if (opts.stoppable) {
         context.setInterval = function () {
@@ -163,21 +206,28 @@ Stack.prototype.compile = function (context, opts) {
             ;
             var i = intervals.indexOf(iv);
             if (i >= 0) intervals.splice(i, 1);
-            if (! intervals.length && ! timeouts.length) {
-              process.nextTick( compiled.emit.bind(this, 'stop', context) );
-            }
+            compiled.checkStopped();
             return res;
         };
         
         context.setTimeout = function () {
-            function setTimeoutProxy () {
-              setTimeout.apply
-                ? setTimeout.apply(this, arguments)
-                : apply(setTimeout, this, arguments);
-                
-              if (! intervals.length && ! timeouts.length) {
-                process.nextTick( compiled.emit.bind(this, 'stop', context) );
+            function setTimeoutProxy (callback, time) {
+              if(typeof callback === "string") {
+                callback = Function(callback);
               }
+              var self = this;
+              function wrappedCallback () {
+                var res = callback()
+                compiled.checkStopped();
+                return res;
+              }
+              
+              var args = [wrappedCallback, time];
+              
+              setTimeout.apply
+                ? setTimeout.apply(this, args)
+                : apply(setTimeout, this, args);
+                
             }
             var to = setTimeoutProxy.apply(this, arguments)
             ;
@@ -192,9 +242,7 @@ Stack.prototype.compile = function (context, opts) {
             ;
             var i = timeouts.indexOf(to);
             if (i >= 0) timeouts.splice(i, 1);
-            if (! intervals.length && ! timeouts.length) {
-              process.nextTick( compiled.emit.bind(this, 'stop', context) );
-            }
+            compiled.checkStopped()
             return res;
         };
         
@@ -202,6 +250,7 @@ Stack.prototype.compile = function (context, opts) {
             stopped = true;
             intervals.forEach(function (iv) { clearInterval(iv) });
             timeouts.forEach(function (to) { clearTimeout(to) });
+            compiled.clearCallbacks();
         };
     }
     else {
@@ -338,6 +387,7 @@ Stack.prototype.run = function (context, opts) {
         try {
             var res = runner( self.source, self.context );
             self.emit('result', res);
+            process.nextTick(self.checkStopped())
         }
         catch (err) {
             self.emit('error', err, {
