@@ -389,10 +389,7 @@ Stack.prototype.run = function (context, opts) {
     
     process.nextTick(function () {
         try {
-            /*var res = runner( self.source, self.context );*/var res = runner(
-                '(function () {' + self.source + '})()',
-                self.context
-            );
+            var res = runner( self.source, self.context );
             self.emit('result', res);
             process.nextTick(self.checkStopped())
         }
