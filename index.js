@@ -314,8 +314,11 @@ Stack.prototype.compile = function (context, opts) {
                 names.call + '(' + ix + ',' + that + ',' + fn + ',' + args + ')'
             );
         }
-        else if (node.name === 'stat' || node.name === 'throw') {
-            node.wrap('{' + names.stat + '(' + ix + ');%s}');
+        else if (node.name === 'stat' ) {
+            node.wrap(''+ names.stat + '(' + ix + '); %s');
+        }
+        else if (node.name === 'throw') {
+            node.wrap('{'+ names.stat + '(' + ix + ');%s}');
         }
         else if (node.name === 'function') {
             node.functionName = burrito.label(node);
@@ -386,7 +389,10 @@ Stack.prototype.run = function (context, opts) {
     
     process.nextTick(function () {
         try {
-            var res = runner( self.source, self.context );
+            /*var res = runner( self.source, self.context );*/var res = runner(
+                '(function () {' + self.source + '})()',
+                self.context
+            );
             self.emit('result', res);
             process.nextTick(self.checkStopped())
         }
