@@ -218,6 +218,7 @@ Stack.prototype.compile = function (context, opts) {
               var self = this;
               function wrappedCallback () {
                 var res = callback()
+                context.clearTimeout(to);
                 compiled.checkStopped();
                 return res;
               }
