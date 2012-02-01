@@ -156,7 +156,9 @@ Stack.prototype.compile = function (context, opts) {
         //was it removed ?
         if(callbacks.indexOf(wrappedCallback) === -1 )
           return;
-        var result = callback.apply(context, arguments);
+        var result = callback.apply
+                ? callback.apply(context, arguments)
+                : apply(callback, context, arguments);
         compiled.removeCallback(wrappedCallback);
         return result;
       }
@@ -174,15 +176,16 @@ Stack.prototype.compile = function (context, opts) {
     compiled.clearCallbacks = function unregisterAll () {
       callbacks.forEach(function(callback) {compiled.removeCallback(callback)});
     }
-        
+    
     compiled.checkStopped = function () {
-      compiled.emit('status', callbacks.length , intervals.length , timeouts.length)
+//      compiled.emit('status', callbacks.length , intervals.length , timeouts.length)
 //try {console.log('check', callbacks.length, intervals.length, timeouts.length)} catch(e){}
       if (! callbacks.length && ! intervals.length && ! timeouts.length) {
 //try {console.log('stop!')} catch(e){}
         process.nextTick( function() {
-            if(!stopped)
-              compiled.emit('stop')
+            if(!stopped) {
+              compiled.emit('stop');
+            }
           }.bind(context) );
         return true;
       } 
@@ -230,8 +233,16 @@ Stack.prototype.compile = function (context, opts) {
                 : apply(setTimeout, this, args);
                 
             }
-            var to = setTimeoutProxy.apply(this, arguments)
-            ;
+            
+            var to = setTimeoutProxy.apply
+                ? setTimeoutProxy.apply(this, arguments)
+                : apply(setTimeoutProxy, this, arguments);
+            
+            /*
+            var to = setTimeout.apply
+                ? setTimeout.apply(this, arguments)
+                : apply(setTimeout, this, arguments);*/
+
             timeouts.push(to);
             return to;
         };
@@ -315,7 +326,7 @@ Stack.prototype.compile = function (context, opts) {
             );
         }
         else if (node.name === 'stat' ) {
-            node.wrap(''+ names.stat + '(' + ix + '); %s');
+            node.wrap(';'+ names.stat + '(' + ix + ');%s;');
         }
         else if (node.name === 'throw') {
             node.wrap('{'+ names.stat + '(' + ix + ');%s}');
@@ -391,7 +402,7 @@ Stack.prototype.run = function (context, opts) {
         try {
             var res = runner( self.source, self.context );
             self.emit('result', res);
-            process.nextTick(self.checkStopped())
+            process.nextTick(self.checkStopped)
         }
         catch (err) {
             self.emit('error', err, {
